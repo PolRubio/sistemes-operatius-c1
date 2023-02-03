@@ -7,13 +7,14 @@
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
 
+#include <stdbool.h>
 
 #define MAX_LINE 100
 #define PORT 8080
 
 int main(int argc, char **argv){   
-    int sock_fd, send_num, recv_num, start_r=0, end_r=100;
-
+    bool game=true, verify;
+    int sock_fd, send_num, recv_num, start_r=0, end_r=100, num;
     struct sockaddr_in servaddr;
 
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
@@ -23,7 +24,6 @@ int main(int argc, char **argv){
     }
 
     bzero(&servaddr, sizeof(servaddr));
-
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(PORT);
 
@@ -37,15 +37,17 @@ int main(int argc, char **argv){
         return 1;
     }
 
-
-    bool game=true;
     while(game){
+        verify=false;
+
         bzero(recv_num, sizeof(int));
-        bzero(send_num, sizeof(int));
 
         printf("take a guess [%d,%d]: ",start_r,end_r);
-        fgets(send,MAX_LINE,stdin);
-        
+        while(!verify){
+            bzero(send_num, sizeof(int));
+            fgets(send_num,sizeof(int),stdin);
+        }
+
         if(write(sock_fd, send_num, sizeof(int))){
             perror("write");
             return 1;
@@ -55,14 +57,18 @@ int main(int argc, char **argv){
             perror("read");
             return 1;
         }
+
         printf("received - %s\n",recv_num);
 
-        if(recv_num==0){
-            printf("GUESSED CORRECTLY.");
-            game=false;
-        } else if(recv_num>0){
-            printf("");
-            
-        }
+        // if(recv_num==0){
+        //     printf("GUESSED CORRECTLY.");
+        //     game=false;
+        // } else if(recv_num>0){
+        //     start_r=send_num;
+        // } else {
+        //     end_r=send_num;
+        // }
+
+        // rewrite
     }
 }
