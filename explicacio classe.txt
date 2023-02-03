@@ -1,0 +1,27 @@
+tres activitats
+
+ACT1:
+    S <----TCP----> C
+
+    server generate a seed 
+    socket bind listen while(1)
+
+    client request connection to server
+
+    server accept connection
+    server generate a random number
+
+    client while generate a number bw 0 and 100
+    client send number to server
+
+    server receive number
+    server compare number with random number
+    server send result to client (-1 if number is lower, 0 if number is equal, 1 if number is higher)
+    
+    client receive result
+    client while result != 0
+
+    client close connection
+
+
+ACT2:
