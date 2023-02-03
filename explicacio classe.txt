@@ -1,5 +1,12 @@
 tres activitats
 
+s'ha d'entregar el codi
+tots els fitxers necesaris per executar
+un informe amb:
+    explicació de com executar
+    explicació del codi
+    demostracio de funcionament (dues execucucions per cada activitat)
+
 ACT1:
     S <----TCP----> C
 
@@ -29,4 +36,3 @@ ACT1:
 
 ACT2:
 
-    
