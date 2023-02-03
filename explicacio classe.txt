@@ -19,9 +19,14 @@ ACT1:
     server send result to client (-1 if number is lower, 0 if number is equal, 1 if number is higher)
     
     client receive result
-    client while result != 0
+    client try to guess the number while result is not 0
 
     client close connection
 
+    The game is the same that in the lab 0 but whit a server and a client
+
+    Vol veure el htns??? i el htms??? no he entes molt bé las siglas
 
 ACT2:
+
+    
