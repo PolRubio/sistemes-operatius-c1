@@ -7,12 +7,20 @@
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
 
+#include <stdlib.h>
+#include <time.h>
 
 #define MAX_LINE 100
 #define PORT 8080
 
+int rbetween(int min, int max){
+    return random()*max + min;
+}
 
 int main(){
+    srandom(time(NULL));
+
+    int guess;
     char text[MAX_LINE]; // variable where the incoming text will be saved.
     int listen_fd, comm_fd; // file descriptors to be used
 
@@ -41,13 +49,11 @@ int main(){
     comm_fd=accept(listen_fd, NULL, NULL);
     // read comm_fd = sent by the client
     // write comm_fd = will be read by the client.
-
+    
+    int r=rbetween(1,100), compare;
     while(1){
         bzero(text,MAX_LINE);
-        int chrs=read(comm_fd,text,MAX_LINE);
-
-        printf("Echoing back - %s\n", text);
-
-        write(comm_fd, text, chrs);
+        int s=read(comm_fd, guess, sizeof(int));
+        write(comm_fd,r-guess,sizeof(r));
     }
 }

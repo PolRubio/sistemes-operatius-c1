@@ -12,10 +12,7 @@
 #define PORT 8080
 
 int main(int argc, char **argv){   
-    int sock_fd;
-
-    char send_txt[MAX_LINE];
-    char recv_txt[MAX_LINE];
+    int sock_fd, send_num, recv_num, start_r=0, end_r=100;
 
     struct sockaddr_in servaddr;
 
@@ -40,22 +37,32 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    while(1){
-        bzero(recv_txt, MAX_LINE);
-        bzero(send_txt, MAX_LINE);
 
-        printf(": ");
-        fgets(send_txt,MAX_LINE,stdin);
+    bool game=true;
+    while(game){
+        bzero(recv_num, sizeof(int));
+        bzero(send_num, sizeof(int));
+
+        printf("take a guess [%d,%d]: ",start_r,end_r);
+        fgets(send,MAX_LINE,stdin);
         
-        if (write(sock_fd, send_txt, strlen(send_txt)) < 0) {
+        if(write(sock_fd, send_num, sizeof(int))){
             perror("write");
             return 1;
         }
 
-        if (read(sock_fd, recv_txt, MAX_LINE) < 0) {
+        if(read(sock_fd, recv_num, sizeof(int)) < 0) {
             perror("read");
             return 1;
         }
-        printf("received - %s\n",recv_txt);
+        printf("received - %s\n",recv_num);
+
+        if(recv_num==0){
+            printf("GUESSED CORRECTLY.");
+            game=false;
+        } else if(recv_num>0){
+            printf("");
+            
+        }
     }
 }
