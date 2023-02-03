@@ -50,8 +50,8 @@ ACT3:
     a third program that will be the responsible of reading the file and sending the number of characters to the server
 
     file3          server           client
-         <----UDP         <----TCP
-          NL---->         TCP---->
+         <----UDP         <----UDP
+          UDP---->         UDP---->
 
     file3 will read the file and send the number of characters to the server
     
