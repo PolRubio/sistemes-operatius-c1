@@ -7,6 +7,8 @@
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
 
+#include <time.h>
+
 
 #define MAX_LINE 100
 #define PORT 8080
@@ -25,12 +27,14 @@ int random_number_gen(int min_range, int max_range, int seed){
 }
 
 int main(){
-    char text[MAX_LINE]; // variable where the incoming text will be saved.
+    char textin[MAX_LINE]; // variable where the incoming text will be saved.
+
     int listen_fd, comm_fd; // file descriptors to be used
 
     struct sockaddr_in servaddr; // struct to hold ips and ports,
     // https://vdc-repo.vmware.com/vmwb-repository/dcr-public/c509579b-fc98-4ec2-bf0c-cadaebc51017/f572d815-0e80-4448-a354-dff39a1d545e/doc/vsockAppendix.8.3.html
 
+    printf("Server side\n");
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0); // creates a listen connection
     // creates a socket with AF_INET (ip family) and SOCK_STREAM
@@ -42,6 +46,8 @@ int main(){
     servaddr.sin_family=AF_INET; // set addressing scheme
     servaddr.sin_port=htons(PORT); // port number
     servaddr.sin_addr.s_addr=htons(INADDR_ANY); // allows to connect any ip
+
+    printf("Waiting for connection on port %d\n" , PORT);
 
     // prepare to listen for connections from ip/port specified earlier
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
@@ -56,15 +62,41 @@ int main(){
 
     int totaliterations=0, randnum, min=0, max=100, num;
 
+    // bzero(text,MAX_LINE);
+    // int chrs=read(comm_fd,text,MAX_LINE);
+
+    // printf("First message recived - %s\n", text);
+
+    // write(comm_fd, random_number_gen(min, max, totaliterations), chrs);
+
     while(1){
-        bzero(text,MAX_LINE);
-        int chrs=read(comm_fd,text,MAX_LINE);
+        // bzero(text,MAX_LINE);
+        // int chrs=read(comm_fd,text,MAX_LINE);
 
-        randnum = random_number_gen(min, max, totaliterations);
-        totaliterations++;
+        // randnum = random_number_gen(min, max, totaliterations);
+        // totaliterations++;
 
-        printf("Echoing back - %s\n", text);
+        // printf("Echoing back - %s\n", text);
 
-        write(comm_fd, text, chrs);
+        // write(comm_fd, "aaaaa", chrs);
+
+        bzero(textin,MAX_LINE);
+
+        //int to string conversion
+        // int chrs=read(comm_fd,textin,MAX_LINE);
+        read(comm_fd,textin,MAX_LINE);
+
+        printf("Text input: %s", textin);
+
+        int randnum = random_number_gen(min, atoi(textin), totaliterations);
+
+        char textout[5];
+        sprintf(textout, "%d", randnum);
+        int chrs=strlen(textout);
+
+        printf("Text output: %s\n", textout);
+        printf("\n\n");
+
+        write(comm_fd, textout, chrs);
     }
 }
