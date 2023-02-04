@@ -12,7 +12,6 @@
 
 
 #define MAX_LINE 100
-#define PORT 8080
 
 int compared(int randnum, int num){
   if(num>randnum) return 1;
@@ -27,7 +26,15 @@ int random_number_gen(int min_range, int max_range, int seed){
     return rand_number;
 }
 
-int main(){
+int main(int argc, char *argv[]){
+    if(argc>2){
+        printf("Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
+        return 0;
+    }
+    printf("Argc: %d\n", argc);
+
+    int PORT=(argc==2)?atoi(argv[1]):8080;
+
     char textin[MAX_LINE]; // variable where the incoming text will be saved.
 
     int listen_fd, comm_fd; // file descriptors to be used

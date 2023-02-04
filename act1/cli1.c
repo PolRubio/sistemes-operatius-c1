@@ -9,9 +9,14 @@
 
 
 #define MAX_LINE 100
-#define PORT 8080
 
-int main(int argc, char **argv){   
+int main(int argc, char *argv[]){       
+    if(argc>3){
+        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        return 0;
+    }
+    int PORT=(argc>=2)?atoi(argv[1]):8080;
+    char *IP=(argc>2)?argv[2]:"127.0.0.1";
     int sock_fd;
 
     char send_txt[MAX_LINE];
@@ -20,6 +25,7 @@ int main(int argc, char **argv){
     struct sockaddr_in servaddr;
 
     printf("Client side\n");
+    printf("Connecting to %s:%d\n", IP, PORT);
 
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
@@ -32,7 +38,7 @@ int main(int argc, char **argv){
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(PORT);
 
-    if(inet_pton(AF_INET, "127.0.0.1", &(servaddr.sin_addr))!= 1) {
+    if(inet_pton(AF_INET, IP, &(servaddr.sin_addr))!= 1) {
         perror("inet_pton");
         return 1;
     }
