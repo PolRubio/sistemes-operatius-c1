@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arpa/inet.h> // inet_pton()
-#include <unistd.h> // read, write, close
+#include <arpa/inet.h>
+#include <unistd.h>
 
 
 #define MAX_LINE 100

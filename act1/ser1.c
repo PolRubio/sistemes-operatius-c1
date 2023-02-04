@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <arpa/inet.h> // inet_pton()
-#include <unistd.h> // read, write, close
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include <time.h>
 
@@ -35,38 +35,29 @@ int main(int argc, char *argv[]){
 
     int PORT=(argc==2)?atoi(argv[1]):8080;
 
-    char textin[MAX_LINE]; // variable where the incoming text will be saved.
+    char textin[MAX_LINE];
 
-    int listen_fd, comm_fd; // file descriptors to be used
+    int listen_fd, comm_fd;
 
-    struct sockaddr_in servaddr; // struct to hold ips and ports,
-    // https://vdc-repo.vmware.com/vmwb-repository/dcr-public/c509579b-fc98-4ec2-bf0c-cadaebc51017/f572d815-0e80-4448-a354-dff39a1d545e/doc/vsockAppendix.8.3.html
+    struct sockaddr_in servaddr;
 
     printf("Server side\n");
 
-    listen_fd=socket(AF_INET, SOCK_STREAM, 0); // creates a listen connection
-    // creates a socket with AF_INET (ip family) and SOCK_STREAM
-    // "Data from all devices wishing to connect on this socket will be redirected to listen_fd."
+    listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
 
-    // sets all servaddr bytes to 0; 
     bzero(&servaddr, sizeof(servaddr)); 
 
-    servaddr.sin_family=AF_INET; // set addressing scheme
-    servaddr.sin_port=htons(PORT); // port number
-    servaddr.sin_addr.s_addr=htons(INADDR_ANY); // allows to connect any ip
+    servaddr.sin_family=AF_INET;
+    servaddr.sin_port=htons(PORT);
+    servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
     printf("Waiting for connection on port %d\n" , PORT);
 
-    // prepare to listen for connections from ip/port specified earlier
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
-    // start listening. maximum N connections (1 in this case), 
     listen(listen_fd, 1);
 
-    // accept connection comming from listen file descriptor, if theres noone wait.
     comm_fd=accept(listen_fd, NULL, NULL);
-    // read comm_fd = sent by the client
-    // write comm_fd = will be read by the client.
 
     int totaliterations=0, min=0, max=100, num, result;
     
@@ -75,9 +66,6 @@ int main(int argc, char *argv[]){
 
     do{
         bzero(textin,MAX_LINE);
-
-        //int to string conversion
-        // int chrs=read(comm_fd,textin,MAX_LINE);
         read(comm_fd,textin,MAX_LINE);
         num = atoi(textin);
         printf("Text input: %d\n", num);
