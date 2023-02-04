@@ -3,7 +3,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
 
@@ -42,12 +42,16 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    while(1){
+    int min=0, max=100, num = max/2, result;
+
+
+    do{
         bzero(recv_txt, MAX_LINE);
         bzero(send_txt, MAX_LINE);
 
-        printf("Max number to generate: ");
-        fgets(send_txt,MAX_LINE,stdin);
+        printf("Numero intentado: %d\n", num);
+        
+        sprintf(send_txt, "%d", num);
         
         if (write(sock_fd, send_txt, strlen(send_txt)) < 0) {
             perror("write");
@@ -58,7 +62,29 @@ int main(int argc, char **argv){
             perror("read");
             return 1;
         }
-        printf("Random number generated: %s\n",recv_txt);
+        printf("Respuesta servidor: %s\n",recv_txt);
+
+        result = atoi(recv_txt);
+
+        if(max-min==1){
+            printf("Random number is the max\n");
+            num = max;
+        }
+        else if(result==0){
+            printf("\tRandom number is equal to %d\n", num);
+            break;
+        }
+        else if(result==1){
+            printf("\tRandom number is less than %d\n", num);
+            max = num;
+            num = (max+min)/2;
+        }
+        else{
+            printf("\tRandom number is greater than %d\n", num);
+            min = num;
+            num = (max+min)/2;
+        }
+
         printf("\n\n");
-    }
+    }while(result!=0);
 }

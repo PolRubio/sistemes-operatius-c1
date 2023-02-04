@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
@@ -60,43 +61,28 @@ int main(){
     // read comm_fd = sent by the client
     // write comm_fd = will be read by the client.
 
-    int totaliterations=0, randnum, min=0, max=100, num;
+    int totaliterations=0, min=0, max=100, num, result;
+    
+    int randnum = random_number_gen(min, max, totaliterations);
+    printf("Random number: %d\n\n", randnum);
 
-    // bzero(text,MAX_LINE);
-    // int chrs=read(comm_fd,text,MAX_LINE);
-
-    // printf("First message recived - %s\n", text);
-
-    // write(comm_fd, random_number_gen(min, max, totaliterations), chrs);
-
-    while(1){
-        // bzero(text,MAX_LINE);
-        // int chrs=read(comm_fd,text,MAX_LINE);
-
-        // randnum = random_number_gen(min, max, totaliterations);
-        // totaliterations++;
-
-        // printf("Echoing back - %s\n", text);
-
-        // write(comm_fd, "aaaaa", chrs);
-
+    do{
         bzero(textin,MAX_LINE);
 
         //int to string conversion
         // int chrs=read(comm_fd,textin,MAX_LINE);
         read(comm_fd,textin,MAX_LINE);
+        num = atoi(textin);
+        printf("Text input: %d\n", num);
 
-        printf("Text input: %s", textin);
-
-        int randnum = random_number_gen(min, atoi(textin), totaliterations);
-
+        result = compared(randnum, num);
         char textout[5];
-        sprintf(textout, "%d", randnum);
+        sprintf(textout, "%d", result);
         int chrs=strlen(textout);
-
         printf("Text output: %s\n", textout);
         printf("\n\n");
 
         write(comm_fd, textout, chrs);
-    }
+        totaliterations++;
+    }while(result!='0');
 }
