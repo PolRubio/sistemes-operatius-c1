@@ -7,15 +7,19 @@
 #include <arpa/inet.h> // inet_pton()
 #include <unistd.h> // read, write, close
 
-#include <stdbool.h>
 
 #define MAX_LINE 100
 #define PORT 8080
 
 int main(int argc, char **argv){   
-    bool game=true, verify;
-    int sock_fd, send_num, recv_num, start_r=0, end_r=100, num;
+    int sock_fd;
+
+    char send_txt[MAX_LINE];
+    char recv_txt[MAX_LINE];
+
     struct sockaddr_in servaddr;
+
+    printf("Client side\n");
 
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
@@ -24,6 +28,7 @@ int main(int argc, char **argv){
     }
 
     bzero(&servaddr, sizeof(servaddr));
+
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(PORT);
 
@@ -37,38 +42,23 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    while(game){
-        verify=false;
+    while(1){
+        bzero(recv_txt, MAX_LINE);
+        bzero(send_txt, MAX_LINE);
 
-        bzero(recv_num, sizeof(int));
-
-        printf("take a guess [%d,%d]: ",start_r,end_r);
-        while(!verify){
-            bzero(send_num, sizeof(int));
-            fgets(send_num,sizeof(int),stdin);
-        }
-
-        if(write(sock_fd, send_num, sizeof(int))){
+        printf("Max number to generate: ");
+        fgets(send_txt,MAX_LINE,stdin);
+        
+        if (write(sock_fd, send_txt, strlen(send_txt)) < 0) {
             perror("write");
             return 1;
         }
 
-        if(read(sock_fd, recv_num, sizeof(int)) < 0) {
+        if (read(sock_fd, recv_txt, MAX_LINE) < 0) {
             perror("read");
             return 1;
         }
-
-        printf("received - %s\n",recv_num);
-
-        // if(recv_num==0){
-        //     printf("GUESSED CORRECTLY.");
-        //     game=false;
-        // } else if(recv_num>0){
-        //     start_r=send_num;
-        // } else {
-        //     end_r=send_num;
-        // }
-
-        // rewrite
+        printf("Random number generated: %s\n",recv_txt);
+        printf("\n\n");
     }
 }
