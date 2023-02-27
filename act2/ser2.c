@@ -70,20 +70,20 @@ int main(int argc, char *argv[]){
        printf("Error! opening file: %s", filename);
        return(0);
     }
+    printf("file opened\n");
     char *myString;
-    //! this method to get the number of lines i 
-    while (fgets(myString, 100, file)){ //? what has to be the maximum size of data to read
+    //! this method to get the number of lines, it can be done in a better way??
+    while(fgets(myString, 100, file)){ //? what has to be the maximum size of data to read??
         printf("text: %s\n", myString);
         numlines++;
     }
 
     int length[numlines];
-    while (fgets(myString, 100, file)){ //? what has to be the maximum size of data to read
-        printf("text: %s\n", myString);
+    numlines=0;
+    while(fgets(myString, 100, file)){ //? what has to be the maximum size of data to read??
+        length[numlines]=strlen(myString);
         numlines++;
     }
-
-
 
     do{
         bzero(textin,MAX_LINE);
