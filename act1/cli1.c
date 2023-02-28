@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    int min=0, max=100, num = max/2, result;
+    int min=0, max=100, num = max/2, result, totaliterations=0;
 
 
     do{
@@ -90,7 +90,9 @@ int main(int argc, char *argv[]){
             min = num;
             num = (max+min)/2;
         }
-
+        totaliterations++;
         printf("\n\n");
     }while(result!=0);
+    printf("Total iterations: %d\n", totaliterations);
+    return(0);
 }

@@ -80,4 +80,6 @@ int main(int argc, char *argv[]){
         write(comm_fd, textout, chrs);
         totaliterations++;
     }while(result!='0');
+    printf("Total iterations: %d\n", totaliterations);
+    return(0);
 }
