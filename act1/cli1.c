@@ -7,7 +7,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <time.h>
-#include <ctype.h>
 
 #define fmin(a, b) (((a) < (b)) ? (a) : (b))
 #define fmax(a, b) (((a) > (b)) ? (a) : (b))
