@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     }
     printf("Argc: %d\n", argc);
 
-    int PORT=(argc>2)?atoi(argv[2]):8080;
+    int PORT=(argc>2)?atoi(argv[2]):8888;
     char *filename=argv[1];
 
     char textin[MAX_LINE];
@@ -64,44 +64,49 @@ int main(int argc, char *argv[]){
     }
     printf("file open\n");
     char *myString, c;
-    //! this method to get the number of lines, it can be done in a better way??
     
+    //! this method to get the number of lines, it can be done in a better way??
     do{
         c = fgetc(file);
-        myString += c;
-        printf("%c", c);
-        if(c == '\n') numlines++;
+        if(c == '\n' || c == EOF) numlines++;
     } while (c != EOF);
-    
-    
-    printf("numlines: %d\n", numlines);
+    //printf("\n");
+    //printf("numlines: %d\n", numlines);
 
     int length[numlines];
     numlines=0;
+    int charcount=0;
+    rewind(file);
 
-    /*do{
-        myString = "";
-        do{
-            c = fgetc(file);
-            myString += c;
-        } while (c != '\n');
-        printf("%s", myString);
-        length[numlines]=strlen(myString);
-        numlines++;
-    } while (c != EOF);*/
+    do{
+        c = fgetc(file);
+        charcount++;
+        if(c == '\n' || c == EOF){  
+            length[numlines]=charcount;
+            numlines++;
+            charcount=0;
+        }
+    } while (c != EOF);    
+    
     printf("file read\n");
+    fclose(file);
 
-    printf("Waiting for connection on port %d\n" , PORT);
+    /*for(int i=0; i<sizeof(length)/sizeof(int); i++){
+        printf("length[%d]: %d\n", i, length[i]);
+    } */
+
+    printf("Waiting for connection on 127.0.0.1:%d\n", PORT);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
     listen(listen_fd, 1);
 
     comm_fd=accept(listen_fd, NULL, NULL);
+    
+    int totaliterations=0, min=0, num, result, randnum;
 
-    
-    
-    int totaliterations=0, min=0, max=100, num, result, randnum;
+    randnum = length[random_number_gen(0, sizeof(length)/sizeof(int), totaliterations)];
+    printf("randnum: %d\n", randnum);
     
     do{
         bzero(textin,MAX_LINE);
@@ -119,5 +124,6 @@ int main(int argc, char *argv[]){
         write(comm_fd, textout, chrs);
         totaliterations++;
     }while(result!='0');
-    fclose(file);
+    printf("Total iterations: %d\n", totaliterations);
+    return(0);
 }
