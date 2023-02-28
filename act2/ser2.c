@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
         printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
         return 0;
     }
-    printf("Argc: %d\n", argc);
+    //printf("Argc: %d\n", argc);
 
     int PORT=(argc>2)?atoi(argv[2]):8888;
     char *filename=argv[1];
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]){
         if(c == '\n' || c == EOF) numlines++;
     } while (c != EOF);
     //printf("\n");
-    //printf("numlines: %d\n", numlines);
+    printf("numlines: %d\n", numlines);
 
     int length[numlines];
     numlines=0;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
         c = fgetc(file);
         charcount++;
         if(c == '\n' || c == EOF){  
-            length[numlines]=charcount;
+            length[numlines]=charcount%100;
             numlines++;
             charcount=0;
         }
