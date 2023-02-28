@@ -50,10 +50,7 @@ int main(int argc, char *argv[]){
 
     char *IP=(argc>2)?argv[2]:DEFAULT_IP;
     struct sockaddr_in servaddr;
-
-    printf("Client side\n");
-    printf("Connecting to %s:%d\n", IP, PORT);
-
+    
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
         perror("socket");
