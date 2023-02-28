@@ -3,21 +3,29 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
-
-#include <arpa/inet.h> // inet_pton()
-#include <unistd.h> // read, write, close
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 
 #define MAX_LINE 100
-#define PORT 8080
 
-int main(int argc, char **argv){   
+int main(int argc, char *argv[]){       
+    if(argc>3){
+        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        return 0;
+    }
+    int PORT=(argc>=2)?atoi(argv[1]):8888;
+    char *IP=(argc>2)?argv[2]:"127.0.0.1";
     int sock_fd;
 
     char send_txt[MAX_LINE];
     char recv_txt[MAX_LINE];
 
     struct sockaddr_in servaddr;
+
+    printf("Client side\n");
+    printf("Connecting to %s:%d\n", IP, PORT);
 
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
@@ -30,7 +38,7 @@ int main(int argc, char **argv){
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(PORT);
 
-    if(inet_pton(AF_INET, "127.0.0.1", &(servaddr.sin_addr))!= 1) {
+    if(inet_pton(AF_INET, IP, &(servaddr.sin_addr))!= 1) {
         perror("inet_pton");
         return 1;
     }
@@ -40,12 +48,16 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    while(1){
+    int min=0, max=100, num = max/2, result, totaliterations=0;
+
+
+    do{
         bzero(recv_txt, MAX_LINE);
         bzero(send_txt, MAX_LINE);
 
-        printf(": ");
-        fgets(send_txt,MAX_LINE,stdin);
+        printf("Numero intentado: %d\n", num);
+        
+        sprintf(send_txt, "%d", num);
         
         if (write(sock_fd, send_txt, strlen(send_txt)) < 0) {
             perror("write");
@@ -56,6 +68,31 @@ int main(int argc, char **argv){
             perror("read");
             return 1;
         }
-        printf("received - %s\n",recv_txt);
-    }
+        printf("Respuesta servidor: %s\n",recv_txt);
+
+        result = atoi(recv_txt);
+
+        if(max-min==1){
+            printf("Random number is the max\n");
+            num = max;
+        }
+        else if(result==0){
+            printf("\tRandom number is equal to %d\n", num);
+            break;
+        }
+        else if(result==1){
+            printf("\tRandom number is less than %d\n", num);
+            max = num;
+            num = (max+min)/2;
+        }
+        else{
+            printf("\tRandom number is greater than %d\n", num);
+            min = num;
+            num = (max+min)/2;
+        }
+        totaliterations++;
+        printf("\n\n");
+    }while(result!=0);
+    printf("Total iterations: %d\n", totaliterations);
+    return 0;
 }

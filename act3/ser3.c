@@ -27,24 +27,75 @@ int random_number_gen(int min_range, int max_range, int seed){
 }
 
 int main(int argc, char *argv[]){
-    if(argc>3){
-        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return 0;
-    }
-    if(argc<2){
-        printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
+    if(argc!=4){
+        printf("You have to enter 3 arguments, you have entered %d arguments\n", argc-1);
         return 0;
     }
     //printf("Argc: %d\n", argc);
 
-    int PORT=(argc>2)?atoi(argv[2]):8888;
-    char *filename=argv[1];
+    int PORT_UDP=atoi(argv[1]); //requestes to file3
+    char *IP=argv[2];           //requestes to file3
+    int PORT_TCP=atoi(argv[3]); //requestes from cli3
 
+
+    char send_txt[MAX_LINE];
+    char recv_txt[MAX_LINE];
     char textin[MAX_LINE];
 
     int listen_fd, comm_fd;
 
+    printf("Client side\n");
+
+    // Here we create the conection with the server (file3.c), we recieve the number of lines, 
+    // we send a random number in that range and we recieve a number from the server
+
+    printf("Connecting to %s:%d\n", IP, PORT_UDP);
+    
+    int sock_fd;
     struct sockaddr_in servaddr;
+
+    sock_fd=socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fd<0){
+        perror("socket");
+        return 1;
+    }
+
+    bzero(&servaddr, sizeof(servaddr));
+
+    servaddr.sin_family=AF_INET;
+    servaddr.sin_port=htons(PORT_UDP);
+
+    if(inet_pton(AF_INET, IP, &(servaddr.sin_addr))!= 1) {
+        perror("inet_pton");
+        return 1;
+    }
+
+    if (connect(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+        perror("connect");
+        return 1;
+    }
+
+    bzero(recv_txt, MAX_LINE);
+    bzero(send_txt, MAX_LINE);
+
+    if(read(sock_fd, recv_txt, MAX_LINE) < 0){
+        perror("read");
+        return 1;
+    }
+
+    int result = atoi(recv_txt);
+    int random_number = random_number_gen(0, result, 0);
+    sprintf(send_txt, "%d", random_number);
+
+    if (write(sock_fd, send_txt, strlen(send_txt)) < 0) {
+        perror("write");
+        return 1;
+    }
+
+    printf("Respuesta servidor: %s\n",recv_txt);
+
+    random_number = atoi(recv_txt);
+
 
     printf("Server side\n");
 
@@ -53,49 +104,11 @@ int main(int argc, char *argv[]){
     bzero(&servaddr, sizeof(servaddr)); 
 
     servaddr.sin_family=AF_INET;
-    servaddr.sin_port=htons(PORT);
+    servaddr.sin_port=htons(PORT_TCP);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
-    int numlines=0;
-    FILE *file;
-    if ((file = fopen(filename,"r")) == NULL){
-       printf("Error! opening file: %s", filename);
-       return(0);
-    }
-    printf("file open\n");
-    char *myString, c;
-    
-    //! this method to get the number of lines, it can be done in a better way??
-    do{
-        c = fgetc(file);
-        if(c == '\n' || c == EOF) numlines++;
-    } while (c != EOF);
-    //printf("\n");
-    printf("numlines: %d\n", numlines);
 
-    int length[numlines];
-    numlines=0;
-    int charcount=0;
-    rewind(file);
-
-    do{
-        c = fgetc(file);
-        charcount++;
-        if(c == '\n' || c == EOF){  
-            length[numlines]=charcount%100;
-            numlines++;
-            charcount=0;
-        }
-    } while (c != EOF);    
-    
-    printf("file read\n");
-    fclose(file);
-
-    /*for(int i=0; i<sizeof(length)/sizeof(int); i++){
-        printf("length[%d]: %d\n", i, length[i]);
-    } */
-
-    printf("Waiting for connection on 127.0.0.1:%d\n", PORT);
+    printf("Waiting for connection on 127.0.0.1:%d\n", PORT_TCP);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
@@ -103,11 +116,8 @@ int main(int argc, char *argv[]){
 
     comm_fd=accept(listen_fd, NULL, NULL);
     
-    int totaliterations=0, min=0, num, result, randnum;
+    int totaliterations=0, min=0, num, randnum;
 
-    randnum = length[random_number_gen(0, sizeof(length)/sizeof(int), totaliterations)];
-    printf("randnum: %d\n", randnum);
-    
     do{
         bzero(textin,MAX_LINE);
         read(comm_fd,textin,MAX_LINE);

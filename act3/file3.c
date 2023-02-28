@@ -118,9 +118,8 @@ int main(int argc, char *argv[]){
     
     randnum = length[num];
 
-    char textout[5];
     sprintf(textout, "%d", randnum);
-    int chrs=strlen(textout);
+    chrs=strlen(textout);
 
     write(comm_fd, textout, chrs);
     return(0);
