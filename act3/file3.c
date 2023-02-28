@@ -97,6 +97,7 @@ int main(int argc, char *argv[]){
 
     printf("Waiting for connection on 127.0.0.1:%d\n", PORT);
 
+
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
     listen(listen_fd, 1);
@@ -105,24 +106,21 @@ int main(int argc, char *argv[]){
     
     int randnum, num;
 
-    printf("randnum: %d\n", randnum);
-
     char textout[5];
     sprintf(textout, "%d", numlines);
     int chrs=strlen(textout);
     write(comm_fd, textout, chrs);
     
+
     bzero(textin,MAX_LINE);
     read(comm_fd,textin,MAX_LINE);
     num = atoi(textin);
-    //printf("Text input: %d\n", num);
+    
     randnum = length[num];
 
     char textout[5];
     sprintf(textout, "%d", randnum);
     int chrs=strlen(textout);
-    //printf("Text output: %s\n", textout);
-    //printf("\n\n");
 
     write(comm_fd, textout, chrs);
     return(0);
