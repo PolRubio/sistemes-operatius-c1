@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <time.h>
+#include <ctype.h>
 
 #define fmin(a, b) (((a) < (b)) ? (a) : (b))
 #define fmax(a, b) (((a) > (b)) ? (a) : (b))
@@ -15,23 +16,18 @@
 #define DEFAULT_PORT 8888
 #define DEFAULT_IP "127.0.0.1"
 
+#define MAX_PORT 65535
+
 
 int random_num(int lower, int upper){
     return (lower>=upper-1)?lower:(rand()%(upper-lower+1))+lower;
 }
 
 int main(int argc, char *argv[]){
-    srand(time(0)); 
-
-    if(argc>3){
-        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return 0;
-    }
-
     int 
-        sock_fd, 
-        PORT=(argc>=2)?atoi(argv[1]):DEFAULT_PORT,
-        iteration=0;
+        sock_fd,
+        iteration=0,
+        port=(argc>=2)?atoi(argv[1]):DEFAULT_PORT;
 
     int32_t
         send_num=-1,
@@ -41,16 +37,24 @@ int main(int argc, char *argv[]){
         max=100,
         num=max/2;
 
-
     uint32_t 
         send_value=0,
         recv_value=0;
-        
 
-
-    char *IP=(argc>2)?argv[2]:DEFAULT_IP;
+    char *ip_address=(argc>2)?argv[2]:DEFAULT_IP;
     struct sockaddr_in servaddr;
+    
 
+
+    srand(time(0)); 
+    if(argc>3){
+        printf("too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        return 0;
+    }else if(port>MAX_PORT || port<=0){
+        printf("that port doesn't exists!\n");
+        return 0;
+    }
+    
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
         perror("socket");
@@ -59,10 +63,10 @@ int main(int argc, char *argv[]){
 
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
-    servaddr.sin_port=htons(PORT);
+    servaddr.sin_port=htons(port);
 
-    if(inet_pton(AF_INET, IP, &(servaddr.sin_addr))!= 1) {
-        perror("inet_pton");
+    if(inet_pton(AF_INET, ip_address, &(servaddr.sin_addr))!= 1) {
+        perror("inet_pton (check the ip address)");
         return 1;
     }
 
