@@ -56,6 +56,41 @@ int main(int argc, char *argv[]){
     servaddr.sin_port=htons(PORT);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
+    int numlines=0;
+    FILE *file;
+    if ((file = fopen(filename,"r")) == NULL){
+       printf("Error! opening file: %s", filename);
+       return(0);
+    }
+    printf("file open\n");
+    char *myString, c;
+    //! this method to get the number of lines, it can be done in a better way??
+    
+    do{
+        c = fgetc(file);
+        myString += c;
+        printf("%c", c);
+        if(c == '\n') numlines++;
+    } while (c != EOF);
+    
+    
+    printf("numlines: %d\n", numlines);
+
+    int length[numlines];
+    numlines=0;
+
+    /*do{
+        myString = "";
+        do{
+            c = fgetc(file);
+            myString += c;
+        } while (c != '\n');
+        printf("%s", myString);
+        length[numlines]=strlen(myString);
+        numlines++;
+    } while (c != EOF);*/
+    printf("file read\n");
+
     printf("Waiting for connection on port %d\n" , PORT);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
@@ -64,27 +99,10 @@ int main(int argc, char *argv[]){
 
     comm_fd=accept(listen_fd, NULL, NULL);
 
-    int totaliterations=0, min=0, max=100, num, result, randnum, numlines=0;
-    FILE *file;
-    if ((file = fopen(filename,"r")) == NULL){
-       printf("Error! opening file: %s", filename);
-       return(0);
-    }
-    printf("file opened\n");
-    char *myString;
-    //! this method to get the number of lines, it can be done in a better way??
-    while(fgets(myString, 100, file)){ //? what has to be the maximum size of data to read??
-        printf("text: %s\n", myString);
-        numlines++;
-    }
-
-    int length[numlines];
-    numlines=0;
-    while(fgets(myString, 100, file)){ //? what has to be the maximum size of data to read??
-        length[numlines]=strlen(myString);
-        numlines++;
-    }
-
+    
+    
+    int totaliterations=0, min=0, max=100, num, result, randnum;
+    
     do{
         bzero(textin,MAX_LINE);
         read(comm_fd,textin,MAX_LINE);
