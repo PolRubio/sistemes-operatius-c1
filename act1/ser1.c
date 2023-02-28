@@ -10,7 +10,8 @@
 
 #include <time.h>
 
-#define DEFAULT_PORT 8888
+#define DEFAULT_port 8888
+#define MAX_port 65535
 
 int32_t compared(int32_t randnum, int32_t num){
     int32_t result=num-randnum;
@@ -26,33 +27,43 @@ int random_number_gen(int min_range, int max_range, int seed){
 }
 
 int main(int argc, char *argv[]){
-    if(argc>2){
-        printf("Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
-        return 0;
-    }
+    uint32_t 
+        recv_value, 
+        send_value;
 
-    uint32_t recv_value, send_value;
-    int32_t recv_num, min=0, max=100, result;
+    int32_t 
+        recv_num, 
+        min=0, 
+        max=100, 
+        result;
 
-    int listen_fd, 
+    int 
+        port=(argc==2)?atoi(argv[1]):DEFAULT_port,
+        listen_fd, 
         comm_fd,
-        PORT=(argc==2)?atoi(argv[1]):DEFAULT_PORT,
         totaliterations=0,
         randnum=0;
         
     struct sockaddr_in servaddr;
-   
+
+    if(argc>2){
+        printf("Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
+        return 0;
+    }else if(port>MAX_port || port<=0){
+        printf("that port doesn't exists!\n");
+        return 0;
+    }
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
 
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
-    servaddr.sin_port=htons(PORT);
+    servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
-    printf("Waiting for connection on port %d\n" , PORT);
+    printf("Waiting for connection on port %d\n" , port);
     listen(listen_fd, 1);
     
     while(1){
