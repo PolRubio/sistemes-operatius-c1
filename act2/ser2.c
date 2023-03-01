@@ -10,42 +10,61 @@
 
 #include <time.h>
 
+#define DEFAULT_PORT 8888
+#define MAX_PORT 65535
 
-#define MAX_LINE 100
+//#define MAX_LINE 100
 
-int compared(int randnum, int num){
-  if(num>randnum) return 1;
-  else if(num<randnum) return -1;
-  else return 0;
+int32_t compared(int32_t randnum, int32_t num){
+  int32_t result=num-randnum;
+  return (result<0)?-1:(result>0)?1:0;
 }
 
 int random_number_gen(int min_range, int max_range, int seed){
     time_t t;
     long long int current_time = time(&t);
-    int rand_number = (current_time*(seed+2451*732)) % (max_range+1-min_range) + min_range ;
-    return rand_number;
+    return (current_time*(seed+2451*732)) % (max_range+1-min_range) + min_range;
 }
 
 int main(int argc, char *argv[]){
     if(argc>3){
         printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
         return 0;
-    }
-    if(argc<2){
+    }if(argc<2){
         printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
         return 0;
     }
-    //printf("Argc: %d\n", argc);
 
-    int PORT=(argc>2)?atoi(argv[2]):8888;
-    char *filename=argv[1];
+    uint32_t
+        recv_value,
+        send_value;
 
-    char textin[MAX_LINE];
+    int32_t
+        recv_num,
+        min=0,
+        max=100,
+        result;
 
-    int listen_fd, comm_fd;
+    int
+        port=(argc>2)?atoi(argv[2]):DEFAULT_PORT,
+        listen_fd,
+        comm_fd,
+        totaliterations=0,
+        numlines=0,
+        randnum=0;
+
+
+    char 
+        *filename=argv[1],
+        *myString,
+        c;
+
+    //char textin[MAX_LINE]; //? can i delet this??
 
     struct sockaddr_in servaddr;
 
+    FILE *file;
+    
     printf("Server side\n");
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
@@ -53,19 +72,16 @@ int main(int argc, char *argv[]){
     bzero(&servaddr, sizeof(servaddr)); 
 
     servaddr.sin_family=AF_INET;
-    servaddr.sin_port=htons(PORT);
+    servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
-    int numlines=0;
-    FILE *file;
     if ((file = fopen(filename,"r")) == NULL){
        printf("Error! opening file: %s", filename);
        return(0);
     }
     printf("file open\n");
-    char *myString, c;
     
-    //! this method to get the number of lines, it can be done in a better way??
+    //! this method get the number of lines, it can be done in a better way??
     do{
         c = fgetc(file);
         if(c == '\n' || c == EOF) numlines++;
