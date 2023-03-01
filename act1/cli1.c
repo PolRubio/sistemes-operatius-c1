@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
     
     if(port>MAX_PORT || port<=0){
         printf("that port doesn't exists!\n");
-        return 0;
+        return(0);
     }
 
     printf("Client side\n");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
         perror("socket");
-        return 1;
+        return(1);
     }
 
     bzero(&servaddr, sizeof(servaddr));
@@ -66,12 +66,12 @@ int main(int argc, char *argv[]){
 
     if(inet_pton(AF_INET, ip_address, &(servaddr.sin_addr))!= 1) {
         perror("inet_pton (check the ip address)");
-        return 1;
+        return(1);
     }
 
     if (connect(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
         perror("connect");
-        return 1;
+        return(1);
     }
 
     do{
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
 
         if(read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
-            return (0);
+            return(0);
         }
         recv_num=ntohl((int32_t)recv_value);
 

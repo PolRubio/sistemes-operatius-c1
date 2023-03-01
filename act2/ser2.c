@@ -13,8 +13,6 @@
 #define DEFAULT_PORT 8888
 #define MAX_PORT 65535
 
-//#define MAX_LINE 100
-
 int32_t compared(int32_t randnum, int32_t num){
   int32_t result=num-randnum;
   return (result<0)?-1:(result>0)?1:0;
@@ -29,10 +27,10 @@ int random_number_gen(int min_range, int max_range, int seed){
 int main(int argc, char *argv[]){
     if(argc>3){
         printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return 0;
+        return(0);
     }if(argc<2){
         printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
-        return 0;
+        return(0);
     }
 
     uint32_t
@@ -54,7 +52,6 @@ int main(int argc, char *argv[]){
         charcount=0,
         randnum=0;
 
-
     char 
         *filename=argv[1],
         *myString,
@@ -65,6 +62,11 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servaddr;
 
     FILE *file;
+
+    if(port>MAX_PORT || port<=0){
+        printf("that port doesn't exists!\n");
+        return(0);
+    }
 
     printf("Server side\n");
 
@@ -115,8 +117,7 @@ int main(int argc, char *argv[]){
     listen(listen_fd, 1);
 
     
-    while (1)
-    {
+    while (1){
         comm_fd=accept(listen_fd, NULL, NULL);
 
         randnum = length[random_number_gen(0, sizeof(length)/sizeof(int), totaliterations)];
@@ -125,12 +126,10 @@ int main(int argc, char *argv[]){
         do{
             read(comm_fd, &recv_value, sizeof(uint32_t));
             recv_num=(int32_t) ntohl(recv_value);
-            
             printf("\trecieved input: %d\n", recv_num);
 
             result=compared(randnum, recv_num);
             send_value=htonl((uint32_t) result);
-
             printf("\tsending: %d\n\n", result);
             write(comm_fd, &result, sizeof(uint32_t));
 
