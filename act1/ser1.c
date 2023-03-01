@@ -88,6 +88,8 @@ int main(int argc, char *argv[]){
 
             totaliterations++;
         }while(result!=0);
+        
+        printf("Total iterations: %d\n", totaliterations);
     }
     close(listen_fd);
 }
