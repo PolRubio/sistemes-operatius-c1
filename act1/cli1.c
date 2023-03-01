@@ -52,9 +52,7 @@ int main(int argc, char *argv[]){
     printf("Client side\n");
     printf("Connecting to %s:%d\n", ip_address, port);
 
-    srand(time(0)); //! i think we can't use srand function, in the lab 0 we can't use it
-    // otherwise, in the client side we dont need in any moment to generate a random number
-    // the random num generation is in charge of the server side
+    srand(time(0));
     
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
@@ -81,6 +79,7 @@ int main(int argc, char *argv[]){
 
         send_num=(int32_t)num;
         printf("\n\npicked  %d\n", send_num);
+
         send_value=htonl((uint32_t) send_num);
         if(write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
