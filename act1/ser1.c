@@ -10,8 +10,8 @@
 
 #include <time.h>
 
-#define DEFAULT_port 8888
-#define MAX_port 65535
+#define DEFAULT_PORT 8888
+#define MAX_PORT 65535
 
 int32_t compared(int32_t randnum, int32_t num){
     int32_t result=num-randnum;
@@ -21,12 +21,15 @@ int32_t compared(int32_t randnum, int32_t num){
 int random_number_gen(int min_range, int max_range, int seed){
     time_t t;
     long long int current_time = time(&t);
-    int rand_number = (current_time*(seed+2451*732)) % (max_range+1-min_range) + min_range;
-
-    return rand_number;
+    return (current_time*(seed+2451*732)) % (max_range+1-min_range) + min_range;
 }
 
 int main(int argc, char *argv[]){
+    if(argc>2){
+        printf("Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
+        return(0);
+    }
+
     uint32_t 
         recv_value, 
         send_value;
@@ -38,21 +41,20 @@ int main(int argc, char *argv[]){
         result;
 
     int 
-        port=(argc==2)?atoi(argv[1]):DEFAULT_port,
+        port=(argc==2)?atoi(argv[1]):DEFAULT_PORT,
         listen_fd, 
         comm_fd,
         totaliterations=0,
         randnum=0;
         
     struct sockaddr_in servaddr;
-
-    if(argc>2){
-        printf("Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
-        return 0;
-    }else if(port>MAX_port || port<=0){
+    
+    if(port>MAX_PORT || port<=0){
         printf("that port doesn't exists!\n");
-        return 0;
+        return(0);
     }
+
+    printf("Server side\n");
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
 
