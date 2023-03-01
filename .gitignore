@@ -1,8 +1,8 @@
 .vscode
-*/cli1
-*/ser1
-*/cli2
-*/ser2
-*/cli3
-*/ser3
-*/file3
+act1/cli1
+act1/ser1
+act2/cli2
+act2/ser2
+act3/cli3
+act3/ser3
+act3/file3
