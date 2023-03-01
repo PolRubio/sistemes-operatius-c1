@@ -35,13 +35,7 @@ typedef struct{
 } Array;
 
 void init_array(Array *a, size_t initial_size){
-    int *tmp=malloc(initial_size*sizeof(int));
-    if(!tmp) {
-        printf("error happend during the creation of the array.");
-        exit(0);
-    }
-
-    a->array=tmp;
+    a->array=malloc(initial_size*sizeof(int));
     a->used=0;
     a->size=initial_size;
 }
@@ -51,7 +45,7 @@ void insert_array(Array *a, int element){
         a->size*=2; // each time the array fills, expand it 100%. probably not the most optimzed value, but it will work.
         int *tmp=realloc(a->array,a->size*sizeof(int));
         if(!tmp) {
-            printf("error happend during the extensioN of the array.");
+            printf("error happend during the extension of the array.");
             exit(0);
         }
         a->array=tmp;
@@ -60,7 +54,9 @@ void insert_array(Array *a, int element){
 }
 
 void free_array(Array *a){
+    memset(a->array, 0, sizeof(a->array));
     free(a->array);
+
     a->array=NULL;
     a->used=a->size=0;
 }
