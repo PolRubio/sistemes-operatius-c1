@@ -8,8 +8,10 @@
 #include <unistd.h>
 #include <time.h>
 
-#define fmin(a, b) (((a) < (b)) ? (a) : (b))
-#define fmax(a, b) (((a) > (b)) ? (a) : (b))
+/*this is redundant, is never used*/
+//? can it be deleted??
+//#define fmin(a, b) (((a) < (b)) ? (a) : (b))
+//#define fmax(a, b) (((a) > (b)) ? (a) : (b))
 
 
 #define DEFAULT_PORT 8888
