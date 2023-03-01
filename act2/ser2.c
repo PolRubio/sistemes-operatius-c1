@@ -103,26 +103,16 @@ int main(int argc, char *argv[]){
 
     int32_t
         recv_num,
-        min=0,
-        max=100,
         result;
 
     int
         port=(argc>2)?atoi(argv[2]):DEFAULT_PORT,
         listen_fd,
         comm_fd,
-        totaliterations=0,
         randnum=0,
-        charcount=0,
-        iterations=0, 
-        min=0, 
-        num, 
-        result;
+        iterations=0;
 
-    char 
-        *filename=argv[1],
-        *myString,
-        c;
+    char *filename=argv[1];
 
     struct sockaddr_in servaddr;
 
@@ -156,7 +146,7 @@ int main(int argc, char *argv[]){
         printf("Waiting for connection on 127.0.0.1:%d...\n", port);
         comm_fd=accept(listen_fd, NULL, NULL);
 
-        randnum=array_holder.array[random_number_gen(0, array_holder.used, totaliterations)];
+        randnum=array_holder.array[random_number_gen(0, array_holder.used, iterations)];
         printf("\nrandom number: %d\n\n", randnum);
 
         do{
@@ -169,10 +159,10 @@ int main(int argc, char *argv[]){
             printf("\tsending: %d\n\n", result);
             write(comm_fd, &result, sizeof(result));
 
-            totaliterations++;
+            iterations++;
         }while(result!=0);
         
-        printf("Total iterations: %d\n", totaliterations);
+        printf("Total iterations: %d\n", iterations);
     }
     close(listen_fd);
     free_array(&array_holder);
