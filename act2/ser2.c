@@ -67,9 +67,8 @@ void get_file_props(Array *a, char *filename){
     FILE *file=fopen(filename,"r");
     if(file==NULL){
        printf("Error! opening file: %s", filename);
-       return(0);
+       exit(0);
     }
-    printf("file open\n");
 
     int counter=0;
     for (char c=getc(file); c!=EOF; c=getc(file)){
@@ -79,9 +78,7 @@ void get_file_props(Array *a, char *filename){
         }
         counter++;
     }
-    
-    printf("file read\n");
-    fclose(file);  
+    fclose(file);
 }
 
 int main(int argc, char *argv[]){
@@ -106,7 +103,8 @@ int main(int argc, char *argv[]){
         listen_fd,
         comm_fd,
         randnum=0,
-        iterations=0;
+        iterations=0,
+        general_iterations=0;
 
     char *filename=argv[1];
 
@@ -136,15 +134,17 @@ int main(int argc, char *argv[]){
     get_file_props(&array_holder, filename);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-    listen(listen_fd, 1);
+    listen(listen_fd, 1);    
 
     while (1){
-        printf("Waiting for connection on 127.0.0.1:%d...\n", port);
+        printf("\nWaiting for connection on 127.0.0.1:%d...\n", port);
         comm_fd=accept(listen_fd, NULL, NULL);
 
-        randnum=array_holder.array[random_number_gen(0, array_holder.used, iterations)];
+        int indx=random_number_gen(0, array_holder.used, general_iterations++);
+        randnum=array_holder.array[indx];
         printf("\nrandom number: %d\n\n", randnum);
 
+        iterations=0;
         do{
             read(comm_fd, &recv_value, sizeof(recv_value));
             recv_num=(int32_t) ntohl(recv_value);
@@ -160,6 +160,7 @@ int main(int argc, char *argv[]){
         
         printf("Total iterations: %d\n", iterations);
     }
+
     close(listen_fd);
     free_array(&array_holder);
 }
