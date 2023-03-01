@@ -51,6 +51,7 @@ int main(int argc, char *argv[]){
         comm_fd,
         totaliterations=0,
         numlines=0,
+        charcount=0,
         randnum=0;
 
 
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servaddr;
 
     FILE *file;
-    
+
     printf("Server side\n");
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
@@ -86,12 +87,12 @@ int main(int argc, char *argv[]){
         c = fgetc(file);
         if(c == '\n' || c == EOF) numlines++;
     } while (c != EOF);
-    //printf("\n");
+
     printf("numlines: %d\n", numlines);
 
     int length[numlines];
     numlines=0;
-    int charcount=0;
+
     rewind(file);
 
     do{
@@ -107,39 +108,36 @@ int main(int argc, char *argv[]){
     printf("file read\n");
     fclose(file);
 
-    /*for(int i=0; i<sizeof(length)/sizeof(int); i++){
-        printf("length[%d]: %d\n", i, length[i]);
-    } */
-
-    printf("Waiting for connection on 127.0.0.1:%d\n", PORT);
+    printf("Waiting for connection on 127.0.0.1:%d\n", port);
 
     bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
     listen(listen_fd, 1);
 
-    comm_fd=accept(listen_fd, NULL, NULL);
     
-    int totaliterations=0, min=0, num, result, randnum;
+    while (1)
+    {
+        comm_fd=accept(listen_fd, NULL, NULL);
 
-    randnum = length[random_number_gen(0, sizeof(length)/sizeof(int), totaliterations)];
-    printf("randnum: %d\n", randnum);
-    
-    do{
-        bzero(textin,MAX_LINE);
-        read(comm_fd,textin,MAX_LINE);
-        num = atoi(textin);
-        //printf("Text input: %d\n", num);
+        randnum = length[random_number_gen(0, sizeof(length)/sizeof(int), totaliterations)];
+        printf("\nrandom number: %d\n\n", randnum);
 
-        result = compared(randnum, num);
-        char textout[5];
-        sprintf(textout, "%d", result);
-        int chrs=strlen(textout);
-        //printf("Text output: %s\n", textout);
-        //printf("\n\n");
+        do{
+            read(comm_fd, &recv_value, sizeof(uint32_t));
+            recv_num=(int32_t) ntohl(recv_value);
+            
+            printf("\trecieved input: %d\n", recv_num);
 
-        write(comm_fd, textout, chrs);
-        totaliterations++;
-    }while(result!='0');
-    printf("Total iterations: %d\n", totaliterations);
-    return(0);
+            result=compared(randnum, recv_num);
+            send_value=htonl((uint32_t) result);
+
+            printf("\tsending: %d\n\n", result);
+            write(comm_fd, &result, sizeof(uint32_t));
+
+            totaliterations++;
+        }while(result!='0');
+        
+        printf("Total iterations: %d\n", totaliterations);
+    }
+    close(listen_fd);
 }
