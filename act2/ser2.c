@@ -91,10 +91,10 @@ void get_file_props(Array *a, char *filename){
 int main(int argc, char *argv[]){
     if(argc>3){
         printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return 0;
+        return(0);
     }if(argc<2){
         printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
-        return 0;
+        return(0);
     }
 
     uint32_t
@@ -117,8 +117,7 @@ int main(int argc, char *argv[]){
         iterations=0, 
         min=0, 
         num, 
-        result, 
-        randnum;
+        result;
 
     char 
         *filename=argv[1],
@@ -132,9 +131,9 @@ int main(int argc, char *argv[]){
 
     if(port>MAX_PORT || port<=0){
         printf("that port doesn't exists!\n");
-        return 0;
+        return(0);
     }
-    
+
     printf("Server side\n");
 
     listen_fd=socket(AF_INET, SOCK_STREAM, 0);
@@ -163,12 +162,10 @@ int main(int argc, char *argv[]){
         do{
             read(comm_fd, &recv_value, sizeof(recv_value));
             recv_num=(int32_t) ntohl(recv_value);
-            
             printf("\trecieved input: %d\n", recv_num);
 
             result=compared(randnum, recv_num);
             send_value=htonl((uint32_t) result);
-
             printf("\tsending: %d\n\n", result);
             write(comm_fd, &result, sizeof(result));
 
