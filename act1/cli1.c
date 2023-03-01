@@ -17,12 +17,11 @@
 
 #define MAX_PORT 65535
 
-
-int random_num(int lower, int upper){
-    return (lower>=upper-1)?lower:(rand()%(upper-lower+1))+lower;
-}
-
 int main(int argc, char *argv[]){
+    if(argc>3){
+        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        return(0);
+    }
     int 
         sock_fd,
         iteration=0,
@@ -43,16 +42,17 @@ int main(int argc, char *argv[]){
     char *ip_address=(argc>2)?argv[2]:DEFAULT_IP;
     struct sockaddr_in servaddr;
     
-
-
-    srand(time(0)); 
-    if(argc>3){
-        printf("too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return 0;
-    }else if(port>MAX_PORT || port<=0){
+    if(port>MAX_PORT || port<=0){
         printf("that port doesn't exists!\n");
         return 0;
     }
+
+    printf("Client side\n");
+    printf("Connecting to %s:%d\n", ip_address, port);
+
+    srand(time(0)); //! i think we can't use srand function, in the lab 0 we can't use it
+    // otherwise, in the client side we dont need in any moment to generate a random number
+    // the random num generation is in charge of the server side
     
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
@@ -77,24 +77,19 @@ int main(int argc, char *argv[]){
     do{
         iteration++;
 
-        // send_num=random_num(fmin(min*1.25,max),fmax(0.75*max,min));
         send_num=(int32_t)num;
-
         printf("\n\npicked  %d\n", send_num);
-    
         send_value=htonl((uint32_t) send_num);
         if(write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
-            return 1;
+            return(0);
         }
 
         if(read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
-            return 1;
+            return (0);
         }
-        recv_num=(int32_t) recv_value; // ntohl(recv_value); seems like it does it automatically.
-
-        // printf("\tserver response: %d\n");
+        recv_num=ntohl((int32_t)recv_value);
 
         if(max-min==1){
             printf("reached the limit!\n");
