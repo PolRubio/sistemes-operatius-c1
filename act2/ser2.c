@@ -10,6 +10,8 @@
 
 #include <time.h>
 
+#define MAXIMUM 100
+
 #define DEFAULT_PORT 8888
 #define MAX_PORT 65535
 
@@ -66,14 +68,14 @@ void free_array(Array *a){
 void get_file_props(Array *a, char *filename){
     FILE *file=fopen(filename,"r");
     if(file==NULL){
-       printf("Error! opening file: %s", filename);
+       fprintf(stderr, "Error! opening file: %s", filename);
        exit(0);
     }
 
     int counter=0;
     for (char c=getc(file); c!=EOF; c=getc(file)){
         if(c=='\n'){
-            insert_array(a,counter%100);
+            insert_array(a,counter%MAXIMUM);
             counter=0;
         }
         counter++;
@@ -83,10 +85,10 @@ void get_file_props(Array *a, char *filename){
 
 int main(int argc, char *argv[]){
     if(argc>3){
-        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
         return(0);
     }if(argc<2){
-        printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
+        fprintf(stderr,"Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
         return(0);
     }
 
@@ -114,7 +116,7 @@ int main(int argc, char *argv[]){
     init_array(&array_holder, INITIAL_ARRAY_SIZE);
 
     if(port>MAX_PORT || port<=0){
-        printf("that port doesn't exists!\n");
+        fprintf(stderr, "that port doesn't exists!\n");
         return(0);
     }
 
@@ -138,7 +140,11 @@ int main(int argc, char *argv[]){
 
     while (1){
         printf("\nWaiting for connection on 127.0.0.1:%d...\n", port);
+
         comm_fd=accept(listen_fd, NULL, NULL);
+        if(comm_fd<0){
+            fprintf(stderr, "Failed to accept the connection:%d\n", comm_fd);
+        }
 
         int indx=random_number_gen(0, array_holder.used, general_iterations++);
         randnum=array_holder.array[indx];
@@ -146,14 +152,21 @@ int main(int argc, char *argv[]){
 
         iterations=0;
         do{
-            read(comm_fd, &recv_value, sizeof(recv_value));
+            if(read(comm_fd, &recv_value, sizeof(recv_value))>0){
+                perrro("read");
+                return 0;
+            }
             recv_num=(int32_t) ntohl(recv_value);
             printf("\trecieved input: %d\n", recv_num);
 
             result=compared(randnum, recv_num);
             send_value=htonl((uint32_t) result);
             printf("\tsending: %d\n\n", result);
-            write(comm_fd, &result, sizeof(result));
+
+            if(write(comm_fd, &result, sizeof(result))){
+                perror("write");
+                return 0;
+            }
 
             iterations++;
         }while(result!=0);

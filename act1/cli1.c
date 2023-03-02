@@ -8,11 +8,8 @@
 #include <unistd.h>
 #include <time.h>
 
-/*this is redundant, is never used*/
-//? can it be deleted??
-//#define fmin(a, b) (((a) < (b)) ? (a) : (b))
-//#define fmax(a, b) (((a) > (b)) ? (a) : (b))
-
+#define MINIMUM 0
+#define MAXIMUM 100
 
 #define DEFAULT_PORT 8888
 #define DEFAULT_IP "127.0.0.1"
@@ -21,7 +18,7 @@
 
 int main(int argc, char *argv[]){
     if(argc>3){
-        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        fprintf(stderr, "Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
         return(0);
     }
     int 
@@ -33,8 +30,8 @@ int main(int argc, char *argv[]){
         send_num=-1,
         recv_num=0,
 
-        min=0, 
-        max=100,
+        min=MINIMUM,
+        max=MAXIMUM,
         num=max/2;
 
     uint32_t 
@@ -45,18 +42,16 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servaddr;
     
     if(port>MAX_PORT || port<=0){
-        printf("that port doesn't exists!\n");
+        fprintf(stderr, "that port doesn't exists!\n");
         return(0);
     }
 
     printf("Client side\n");
     printf("Connecting to %s:%d\n", ip_address, port);
-
-    srand(time(0));
     
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
-        perror("socket");
+        fprintf(stderr,"Failed to create socket: %s\n", strerror(sock_fd));
         return(1);
     }
 
@@ -65,7 +60,7 @@ int main(int argc, char *argv[]){
     servaddr.sin_port=htons(port);
 
     if(inet_pton(AF_INET, ip_address, &(servaddr.sin_addr))!= 1) {
-        perror("inet_pton (check the ip address)");
+        perror("inet_pton");
         return(1);
     }
 
@@ -77,10 +72,9 @@ int main(int argc, char *argv[]){
     do{
         iteration++;
 
-        send_num=(int32_t)num;
-        printf("\n\npicked  %d\n", send_num);
+        printf("\n\npicked  %d\n", num);
 
-        send_value=htonl((uint32_t) send_num);
+        send_value=htonl((uint32_t) num);
         if(write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
             return(0);
@@ -97,7 +91,7 @@ int main(int argc, char *argv[]){
             num=max;
             break;
         }else if(recv_num==0){
-            printf("\nrandom number is equal to %d\n", num);
+            printf("\nrandom number found\n");
             break;
         }else{
             if(recv_num>0){
@@ -109,7 +103,6 @@ int main(int argc, char *argv[]){
             }
             num=(max+min)/2;
         }
-        send_num=0;
     }while(recv_num!=0);
     
     printf("\tnumber: %d\n\tguesses: %d\n", num, iteration);
