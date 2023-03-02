@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#define MINIMUM 0
+#define MAXIMUM 100
+
 #define DEFAULT_PORT 8888
 #define DEFAULT_IP "127.0.0.1"
 
@@ -15,8 +18,8 @@
 
 int main(int argc, char *argv[]){       
     if(argc>3){
-        printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
+        exit(0);
     }
 
     int
@@ -30,9 +33,9 @@ int main(int argc, char *argv[]){
         send_num=-1,
         recv_num=0,
 
-        min=0, 
-        max=100,
-        num=max/2;
+        min=MINIMUM, 
+        max=MAXIMUM,
+        current_guess=max/2;
 
     uint32_t 
         send_value=0,
@@ -41,8 +44,8 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servaddr;
 
     if(port>MAX_PORT || port<=0){
-        printf("that port doesn't exists!\n");
-        return(0);
+        fprintf(stderr,"that port doesn't exists!\n");
+        exit(0);
     }
 
     printf("Client side\n");
@@ -51,61 +54,61 @@ int main(int argc, char *argv[]){
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
         perror("socket");
-        return(1);
+        exit(0);
     }
 
-    bzero(&servaddr, sizeof(servaddr));
+    memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
 
     if(inet_pton(AF_INET, ip_address, &(servaddr.sin_addr))!= 1) {
         perror("inet_pton");
-        return(1);
+        exit(0);
     }
 
-    if (connect(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+    int connect_status=connect(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    if(connect_status < 0) {
         perror("connect");
-        return(1);
+        exit(0);
     }
 
     do{
         iteration++;
         
-        send_num=(int32_t)num;
-        printf("\n\npicked %d\n", send_num);
-        send_value=htonl((uint32_t)send_num);
+        printf("\n\npicked %d\n", current_guess);
+        send_value=htonl((uint32_t)current_guess);
         if (write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
-            return(0);
+            exit(0);
         }
 
         if (read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
-            return(0);
+            exit(0);
         }
         recv_num=ntohl((int32_t)recv_value);
 
         if(max-min==1){
             printf("reached the limit!\n");
-            num=max;
+            current_guess=max;
             break;
         }else if(recv_num==0){
-            printf("\nrandom number is equal to %d\n", num);
+            printf("\nrandom number is equal to %d\n", current_guess);
             break;
         }else{
             if(recv_num>0){
-                printf("\trandom number is less than %d\n", num);
-                max=num;
+                printf("\trandom number is less than %d\n", current_guess);
+                max=current_guess;
             }else{
-                printf("\trandom number is greater than %d\n", num);
-                min=num;
+                printf("\trandom number is greater than %d\n", current_guess);
+                min=current_guess;
             }
-            num=(max+min)/2;
+            current_guess=(max+min)/2;
         }
         send_num=0;
     }while(recv_num!=0);
 
-    printf("\tnumber: %d\n\tguesses: %d\n", num, iteration);
+    printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
 
     close(sock_fd);
     printf("goodbye.\n");

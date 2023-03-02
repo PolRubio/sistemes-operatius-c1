@@ -30,7 +30,7 @@ int random_number_gen(int min_range, int max_range, int seed){
 int main(int argc, char *argv[]){
     if(argc>2){
         fprintf(stderr, "Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }
 
     uint32_t 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 
     int 
         port=(argc==2)?atoi(argv[1]):DEFAULT_PORT,
-        listen_fd, 
+        sock_fd, 
         comm_fd,
         totaliterations=0,
         randnum=0;
@@ -54,35 +54,35 @@ int main(int argc, char *argv[]){
     
     if(port>MAX_PORT || port<=0){
         fprintf(stderr,"that port doesn't exists!\n");
-        return(0);
+        exit(0);
     }
 
     printf("Server side\n");
 
-    listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
-    if(listen_fd<0){
-        fprintf(stderr,"Failed to create socket: %s\n", strerror(listen_fd));
+    sock_fd=socket(AF_INET, SOCK_STREAM, 0); 
+    if(sock_fd<0){
+        fprintf(stderr,"Failed to create socket: %s\n", strerror(sock_fd));
         return 0;
     }
 
-    bzero(&servaddr, sizeof(servaddr));
+    memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
-    if(bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
+    if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
         perror("bind");
         return 0;
     }
 
-    if(listen(listen_fd, 1)<0){
+    if(listen(sock_fd, 1)<0){
         perrro("listen");
         return 0;
     }
     
     while(1){
         printf("Waiting for connection on port %d\n" , port);
-        comm_fd=accept(listen_fd, NULL, NULL);
+        comm_fd=accept(sock_fd, NULL, NULL);
         if(comm_fd<0){
             perror("accept connection");
             return 0;
@@ -114,5 +114,5 @@ int main(int argc, char *argv[]){
         
         printf("Total iterations: %d\n", totaliterations);
     }
-    close(listen_fd);
+    close(sock_fd);
 }

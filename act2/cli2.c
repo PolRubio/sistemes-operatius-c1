@@ -19,7 +19,7 @@
 int main(int argc, char *argv[]){       
     if(argc>3){
         fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }
 
     int
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 
     if(port>MAX_PORT || port<=0){
         fprintf(stderr,"that port doesn't exists!\n");
-        return(0);
+        exit(0);
     }
 
     printf("Client side\n");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    bzero(&servaddr, sizeof(servaddr));
+    memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
 
@@ -79,12 +79,12 @@ int main(int argc, char *argv[]){
         send_value=htonl((uint32_t)current_guess);
         if (write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
-            return(0);
+            exit(0);
         }
 
         if (read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
-            return(0);
+            exit(0);
         }
         recv_num=ntohl((int32_t)recv_value);
 

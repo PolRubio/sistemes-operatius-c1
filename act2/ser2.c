@@ -47,7 +47,7 @@ void insert_array(Array *a, int element){
         a->size*=2; // each time the array fills, expand it 100%. probably not the most optimzed value, but it will work.
         int *tmp=realloc(a->array,a->size*sizeof(int));
         if(!tmp) {
-            printf("error happend during the extension of the array.");
+            fprintf(stderr,"error happend during the extension of the array.");
             exit(0);
         }
         a->array=tmp;
@@ -86,10 +86,10 @@ void get_file_props(Array *a, char *filename){
 int main(int argc, char *argv[]){
     if(argc>3){
         fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }if(argc<2){
         fprintf(stderr,"Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }
 
     uint32_t
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]){
 
     int
         port=(argc>2)?atoi(argv[2]):DEFAULT_PORT,
-        listen_fd,
+        sock_fd,
         comm_fd,
         randnum=0,
         iterations=0,
@@ -117,31 +117,31 @@ int main(int argc, char *argv[]){
 
     if(port>MAX_PORT || port<=0){
         fprintf(stderr, "that port doesn't exists!\n");
-        return(0);
+        exit(0);
     }
 
     printf("Server side\n");
 
-    listen_fd=socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_fd<0){
+    sock_fd=socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fd<0){
         perror("socket");
         return 1;
     }
 
-    bzero(&servaddr, sizeof(servaddr)); 
+    memset(&servaddr, 0, sizeof(servaddr)); 
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
     
     get_file_props(&array_holder, filename);
 
-    bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-    listen(listen_fd, 1);    
+    bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    listen(sock_fd, 1);    
 
     while (1){
         printf("\nWaiting for connection on 127.0.0.1:%d...\n", port);
 
-        comm_fd=accept(listen_fd, NULL, NULL);
+        comm_fd=accept(sock_fd, NULL, NULL);
         if(comm_fd<0){
             fprintf(stderr, "Failed to accept the connection:%d\n", comm_fd);
         }
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
 
         iterations=0;
         do{
-            if(read(comm_fd, &recv_value, sizeof(recv_value))>0){
+            if(read(comm_fd, &recv_value, sizeof(recv_value))<0){
                 perrro("read");
                 return 0;
             }
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]){
             send_value=htonl((uint32_t) result);
             printf("\tsending: %d\n\n", result);
 
-            if(write(comm_fd, &result, sizeof(result))){
+            if(write(comm_fd, &result, sizeof(result))<0){
                 perror("write");
                 return 0;
             }
@@ -174,6 +174,6 @@ int main(int argc, char *argv[]){
         printf("Total iterations: %d\n", iterations);
     }
 
-    close(listen_fd);
+    close(sock_fd);
     free_array(&array_holder);
 }

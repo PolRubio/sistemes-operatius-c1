@@ -13,14 +13,72 @@
 #define DEFAULT_PORT 9999
 #define MAX_PORT 65535
 
+#define MAXIMUM 100
+
+#define INITIAL_ARRAY_SIZE 5
+
+// DYNAMIC ARRAY
+typedef struct{
+    int *array;
+    size_t used;
+    size_t size;
+} Array;
+
+void init_array(Array *a, size_t initial_size){
+    a->array=malloc(initial_size*sizeof(int));
+    a->used=0;
+    a->size=initial_size;
+}
+
+void insert_array(Array *a, int element){
+    if(a->used==a->size){
+        a->size*=2; // each time the array fills, expand it 100%. probably not the most optimzed value, but it will work.
+        int *tmp=realloc(a->array,a->size*sizeof(int));
+        if(!tmp) {
+            fprintf(stderr,"error happend during the extension of the array.");
+            exit(0);
+        }
+        a->array=tmp;
+    }
+    a->array[a->used++]=element;
+}
+
+void free_array(Array *a){
+    memset(a->array, 0, sizeof(a->array));
+    free(a->array);
+
+    a->array=NULL;
+    a->used=a->size=0;
+}
+// END
+
+void get_file_props(Array *a, char *filename){
+    FILE *file=fopen(filename,"r");
+    if(file==NULL){
+       fprintf(stderr, "Error! opening file: %s", filename);
+       exit(0);
+    }
+
+    int counter=0;
+    for (char c=getc(file); c!=EOF; c=getc(file)){
+        if(c=='\n'){
+            
+            insert_array(a,counter%MAXIMUM);
+            counter=0;
+        }
+        counter++;
+    }
+    fclose(file);
+}
+
 int main(int argc, char *argv[]){
     if(argc>3){
         printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }
     if(argc<2){
         printf("Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
-        return(0);
+        exit(0);
     }
 
     uint32_t
@@ -29,97 +87,90 @@ int main(int argc, char *argv[]){
 
     int32_t
         recv_num,
-        min=0,
-        max=100,
-        result;
+        max=MAXIMUM;
 
     int
         port=(argc>2)?atoi(argv[2]):DEFAULT_PORT,
-        listen_fd,
+        sock_fd,
         comm_fd,
-        totaliterations=0,
-        numlines=0,
-        charcount=0,
-        randnum=0;
+        received,sent;
 
-    char 
-        *filename=argv[1],
-        *myString,
-        c;
+    char *filename=argv[1];
 
-    struct sockaddr_in servaddr;
-    
-    FILE *file;
+    struct sockaddr_in servaddr, clientaddr;
+
+    Array array_holder;
+    init_array(&array_holder, INITIAL_ARRAY_SIZE);
 
     if(port>MAX_PORT || port<=0){
         printf("that port doesn't exists!\n");
-        return(0);
+        exit(0);
     }
 
     printf("Server side\n");
 
-    listen_fd=socket(AF_INET, SOCK_STREAM, 0); 
+    sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if(sock_fd<0){
+        perror("socker");
+        exit(0);
+    }
 
-    bzero(&servaddr, sizeof(servaddr)); 
+    memset(&servaddr,0,sizeof(servaddr));
+    memset(&clientaddr,0,sizeof(clientaddr));
 
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
 
-    if ((file = fopen(filename,"r")) == NULL){
-       printf("Error! opening file: %s", filename);
-       return(0);
+    get_file_props(&array_holder,filename);
+
+    if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
+        perror("bind");
+        exit(0);
     }
-    printf("file open\n");
-    
-    //! this method get the number of lines, it can be done in a better way??
-    do{
-        c = fgetc(file);
-        if(c == '\n' || c == EOF) numlines++;
-    } while (c != EOF);
 
-    printf("numlines: %d\n", numlines);
+    printf("\nWaiting for initial connection on 127.0.0.1:%d...\n", port);
 
-    int length[numlines];
-    numlines=0;
+    // INITIAL CONNECTION (wait for UDP client to contact and send number of lines.)
+    unsigned int clientaddr_len=sizeof(clientaddr);
+    received=recvfrom(sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &clientaddr,&clientaddr_len);
+    if (received<0) {
+        perror("Error receiveing from client");
+        exit(0);
+    } else printf("got %d\n",(int) ntohl(recv_value));
 
-    rewind(file);
+    send_value=htonl((uint32_t) array_holder.used);
+    printf("sending lines: %d\n\n", (int)array_holder.used);
 
-    do{
-        c = fgetc(file);
-        charcount++;
-        if(c == '\n' || c == EOF){  
-            length[numlines]=charcount%100;
-            numlines++;
-            charcount=0;
-        }
-    } while (c != EOF);    
-    
-    printf("file read\n");
-    fclose(file);
-
-    printf("Waiting for connection on 127.0.0.1:%d\n", port);
-
-    bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-
-    listen(listen_fd, 1);
+    sent=sendto(sock_fd,&send_value,received,0,(struct sockaddr *) &clientaddr,clientaddr_len);
+    if(sent<0){
+        perror("send error");
+        exit(0);
+    }
+    // END
 
     while(1){
-        comm_fd=accept(listen_fd, NULL, NULL);
+        memset(&send_value,0,sizeof(send_value)); // necessary?
+        memset(&recv_value,0,sizeof(recv_value)); // necessary?
         
-        send_value=htonl((uint32_t) numlines);
-        printf("\tsending: %d\n\n", numlines);
-        write(comm_fd, &result, sizeof(uint32_t));
 
-        while(1){ //? if the conection with the client is closed this will exit??
-            read(comm_fd, &recv_value, sizeof(uint32_t));
-            recv_num=(int32_t) ntohl(recv_value);
-            printf("\trecieved input: %d\n", recv_num);
+        received=recvfrom(sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &clientaddr,&clientaddr_len);
+        if (received<0) {
+            perror("Error receiveing from client");
+            exit(0);
+        }
 
-            send_value=htonl((uint32_t) length[recv_num]);
-            printf("\tsending: %d\n\n", numlines);
-            write(comm_fd, &result, sizeof(uint32_t));
+        recv_num=((int32_t) ntohl(recv_value)) % array_holder.used;
+        printf("\trecieved line num: %d\n", recv_num);
+
+        send_value=htonl((uint32_t) array_holder.array[recv_num]);
+        printf("\tsending chars: %d\n\n", array_holder.array[recv_num]);
+
+        sent=sendto(sock_fd,&send_value,received,0,(struct sockaddr *) &clientaddr,clientaddr_len);
+        if(sent<0){
+            perror("send");
+            exit(0);
         }
     }
-    close(listen_fd);
+    close(sock_fd);
 }
