@@ -115,8 +115,8 @@ int main(int argc, char *argv[]){
     Array array_holder;
     init_array(&array_holder, INITIAL_ARRAY_SIZE);
 
-    if(port>MAX_PORT || port<=0){
-        fprintf(stderr, "that port doesn't exists!\n");
+    if(!(port<=MAX_PORT && port>=0)){
+        fprintf(stderr, "Invalid port number\n");
         exit(0);
     }
 

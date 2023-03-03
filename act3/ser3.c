@@ -28,13 +28,65 @@ int random_number_gen(int min_range, int max_range, int seed){
 }
 
 void port_checker(int udp_port, int tcp_port){
-    if(udp_port>MAX_PORT || udp_port<=0 || tcp_port>MAX_PORT || tcp_port<=0 ){
-        fprintf(stderr,"that port doesn't exists!\n");
+    if(!(udp_port<=MAX_PORT && udp_port>=0 && tcp_port<=MAX_PORT && tcp_port>=0)){
+        fprintf(stderr,"Invalid port number\n");
         exit(0);
     }else if(udp_port==tcp_port){
         fprintf(stderr,"udp and tcp port can't be the same! (%d=%d)",tcp_port,udp_port);
         exit(0);
     }
+}
+
+int32_t get_lines_num(struct sockaddr_in *udp_servaddr, int *udp_sock_fd){
+    int 
+        udp_sent,
+        udp_received;
+    uint32_t 
+        secret=htonl((uint32_t) CONN_KEY),
+        recv_value;
+    unsigned int udp_servaddr_size=sizeof(*udp_servaddr);
+
+    udp_sent=sendto(*udp_sock_fd,&secret,sizeof(uint32_t),0,(struct sockaddr *) udp_servaddr,udp_servaddr_size);
+    if(udp_sent<0){
+        perror("sendto");
+        exit(0);
+    }
+
+    udp_received=recvfrom(*udp_sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) udp_servaddr,&udp_servaddr_size);
+    if(udp_received<0){
+        perror("recvfrom");
+        exit(0);
+    }
+
+    return((int32_t) ntohl(recv_value));
+}
+
+int get_secret(int received_lines_num, int *udp_sock_fd, struct sockaddr_in *udp_servaddr){
+    
+    int 
+        random_line=(int32_t) random_number_gen(0, received_lines_num, 1),
+        udp_sent,
+        udp_received;
+    uint32_t 
+        encoded_line=htonl((uint32_t)random_line),
+        recv_value;
+    unsigned int udp_servaddr_size=sizeof(*udp_servaddr);
+    
+    printf("\n\npicked a random line %d [0,%d]\n", random_line, received_lines_num);
+
+    udp_sent=sendto(*udp_sock_fd,&encoded_line,sizeof(encoded_line),0,(struct sockaddr *) udp_servaddr,udp_servaddr_size);
+    if(udp_sent<0){
+        perror("sendto");
+        exit(0);
+    }
+
+    udp_received=recvfrom(*udp_sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) udp_servaddr,&udp_servaddr_size);
+    if(udp_received<0){
+        perror("recvfrom");
+        exit(0);
+    }
+    
+    return((int32_t) ntohl(recv_value));
 }
 
 int main(int argc, char *argv[]){
@@ -71,6 +123,7 @@ int main(int argc, char *argv[]){
 
     port_checker(udp_port,tcp_port);
 
+    // SETTING UP UDP CONNECTION
     udp_sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (udp_sock_fd<0){
         perror("socket");
@@ -79,33 +132,17 @@ int main(int argc, char *argv[]){
     udp_servaddr.sin_family=AF_INET;
     udp_servaddr.sin_port=htons(udp_port);
     udp_servaddr.sin_addr.s_addr=inet_addr(ip_address);
+    // END
 
-    unsigned int udp_servaddr_size=sizeof(udp_servaddr);
+    received_lines_num=get_lines_num(&udp_servaddr,&udp_sock_fd);
 
-    uint32_t secret=htonl((uint32_t) CONN_KEY);
-    udp_sent=sendto(udp_sock_fd,&secret,sizeof(uint32_t),0,(struct sockaddr *) &udp_servaddr,udp_servaddr_size);
-    if(udp_sent<0){
-        perror("sendto");
-        exit(0);
-    }
-
-    udp_received=recvfrom(udp_sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &udp_servaddr,&udp_servaddr_size);
-    if(udp_received<0){
-        perror("recvfrom");
-        exit(0);
-    }
-
-    received_lines_num=(int32_t) ntohl(recv_value);
-    printf("\trecieved file lines: %d\n", received_lines_num);
-
+    // SETTING UP TCP CONNECTION
     tcp_sock_fd=socket(AF_INET, SOCK_STREAM, 0); 
 
     memset(&tcp_servaddr, 0, sizeof(tcp_servaddr)); 
     tcp_servaddr.sin_family=AF_INET;
     tcp_servaddr.sin_port=htons(tcp_port);
     tcp_servaddr.sin_addr.s_addr=htons(INADDR_ANY);
-
-    printf("Waiting for connection on 127.0.0.1:%d\n", tcp_port);
 
     if(bind(tcp_sock_fd, (struct sockaddr *) &tcp_servaddr, sizeof(tcp_servaddr))<0){
         perror("bind");
@@ -115,30 +152,19 @@ int main(int argc, char *argv[]){
         perror("listen");
         exit(0);
     }
+    // END
 
     while(1){
+        printf("Waiting for connection on 127.0.0.1:%d\n", tcp_port);
+
         comm_fd=accept(tcp_sock_fd, NULL, NULL);
         if(comm_fd<0){
             fprintf(stderr,"Failed to accept the connection:%d\n",comm_fd);
         }
 
-        send_num=(int32_t) random_number_gen(0, received_lines_num, 1);
-        printf("\n\npicked a random line %d [0,%d]\n", send_num, received_lines_num);
-        send_value=htonl((uint32_t)send_num);
-
-        udp_sent=sendto(udp_sock_fd,&send_value,sizeof(send_value),0,(struct sockaddr *) &udp_servaddr,udp_servaddr_size);
-        if(udp_sent<0){
-            perror("sendto");
-            exit(0);
-        }
-
-        udp_received=recvfrom(udp_sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &udp_servaddr,&udp_servaddr_size);
-        if(udp_received<0){
-            perror("recvfrom");
-            exit(0);
-        }
-        secret_number=(int32_t) ntohl(recv_value);
-        printf("\trecieved chars: %d\n", secret_number);
+        // "GENERATE" "RANDOM" NUMBER 
+        secret_number=get_secret(received_lines_num,&udp_sock_fd,&udp_servaddr);
+        // END
 
         totaliterations=0;
         do{

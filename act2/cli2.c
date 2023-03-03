@@ -43,8 +43,8 @@ int main(int argc, char *argv[]){
 
     struct sockaddr_in servaddr;
 
-    if(port>MAX_PORT || port<=0){
-        fprintf(stderr,"that port doesn't exists!\n");
+    if(!(port<=MAX_PORT && port>=0)){
+        fprintf(stderr,"Invalid port number\n");
         exit(0);
     }
 

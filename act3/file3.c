@@ -71,6 +71,32 @@ void get_file_props(Array *a, char *filename){
     fclose(file);
 }
 
+void send_file_lines(struct sockaddr_in *clientaddr,int *sock_fd, int used){
+    unsigned int clientaddr_len=sizeof(*clientaddr);
+    int
+        received,
+        sent;
+    uint32_t 
+        send_value,
+        recv_value;
+
+    received=recvfrom(*sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &clientaddr,&clientaddr_len);
+    if (received<0) {
+        perror("Error receiveing from client");
+        exit(0);
+    }
+    printf("got %d\n",(int) ntohl(recv_value));
+
+    send_value=htonl((uint32_t) used);
+    printf("sending lines: %d\n\n", used);
+
+    sent=sendto(*sock_fd,&send_value,received,0,(struct sockaddr *) &clientaddr,clientaddr_len);
+    if(sent<0){
+        perror("send error");
+        exit(0);
+    }
+}
+
 int main(int argc, char *argv[]){
     if(argc>3){
         printf("Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
@@ -102,61 +128,55 @@ int main(int argc, char *argv[]){
     Array array_holder;
     init_array(&array_holder, INITIAL_ARRAY_SIZE);
 
-    if(port>MAX_PORT || port<=0){
-        printf("that port doesn't exists!\n");
+    // CHECKING PORTS
+    if(!(port<=MAX_PORT && port>=0)){
+        printf("Invalid port number\n");
         exit(0);
     }
+    // END
 
-    printf("Server side\n");
-
-    sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if(sock_fd<0){
-        perror("socker");
-        exit(0);
-    }
 
     memset(&servaddr,0,sizeof(servaddr));
     memset(&clientaddr,0,sizeof(clientaddr));
 
+    unsigned int clientaddr_len=sizeof(clientaddr);
+
+
+    printf("Server side\n");
+
+    // SETTING UP UDP SOCKET
+    sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if(sock_fd<0){
+        perror("socket");
+        exit(0);
+    }
+
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
-
-    get_file_props(&array_holder,filename);
-
+    
     if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
         perror("bind");
         exit(0);
     }
+    // END
+
+    get_file_props(&array_holder,filename);
+
 
     printf("\nWaiting for initial connection on 127.0.0.1:%d...\n", port);
 
     // INITIAL CONNECTION (wait for UDP client to contact and send number of lines.)
-    unsigned int clientaddr_len=sizeof(clientaddr);
-    received=recvfrom(sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &clientaddr,&clientaddr_len);
-    if (received<0) {
-        perror("Error receiveing from client");
-        exit(0);
-    } else printf("got %d\n",(int) ntohl(recv_value));
-
-    send_value=htonl((uint32_t) array_holder.used);
-    printf("sending lines: %d\n\n", (int)array_holder.used);
-
-    sent=sendto(sock_fd,&send_value,received,0,(struct sockaddr *) &clientaddr,clientaddr_len);
-    if(sent<0){
-        perror("send error");
-        exit(0);
-    }
+    send_file_lines(&clientaddr,&sock_fd, (int) array_holder.used);
     // END
 
     while(1){
         memset(&send_value,0,sizeof(send_value)); // necessary?
         memset(&recv_value,0,sizeof(recv_value)); // necessary?
-        
 
         received=recvfrom(sock_fd,&recv_value,sizeof(recv_value),0,(struct sockaddr *) &clientaddr,&clientaddr_len);
         if (received<0) {
-            perror("Error receiveing from client");
+            perror("Error receiving from client");
             exit(0);
         }
 

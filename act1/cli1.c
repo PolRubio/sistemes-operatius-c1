@@ -41,8 +41,8 @@ int main(int argc, char *argv[]){
     char *ip_address=(argc>2)?argv[2]:DEFAULT_IP;
     struct sockaddr_in servaddr;
     
-    if(port>MAX_PORT || port<=0){
-        fprintf(stderr, "that port doesn't exists!\n");
+    if(!(port<=MAX_PORT && port>=0)){
+        fprintf(stderr, "Invalid port number\n");
         exit(0);
     }
 
