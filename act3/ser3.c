@@ -19,8 +19,7 @@
 
 
 int32_t compared(int randnum, int num){
-    // compare random generated number and the user guessed.
-
+    // COMPARES THE RANDOM NUMBER WITH THE NUMBER RECEIVED FROM THE CLIENT
     if(num>randnum) return 1;
     else if(num<randnum) return -1;
     else return 0;
@@ -110,6 +109,8 @@ void setup_udp_connection(int *udp_sock_fd, struct sockaddr_in *udp_servaddr, in
     // creating an UDP connection to ip_address:udp_port 
 
     *udp_sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    
+    // CHECKING IF THE SOCKET IS CREATED SUCCESSFULLY
     if (udp_sock_fd<0){
         perror("socket");
         return(1);
@@ -125,6 +126,13 @@ void setup_tcp_connection(int *tcp_sock_fd, struct sockaddr_in *tcp_servaddr, in
 
     *tcp_sock_fd=socket(AF_INET, SOCK_STREAM, 0);
 
+    // CHECKING IF THE SOCKET IS CREATED SUCCESSFULLY
+    if(tcp_sock_fd<0){
+        perror("socket");
+        exit(0);
+    }
+
+    // INITIALIZING THE SOCKET ADDRESS STRUCTURE
     tcp_servaddr->sin_family=AF_INET;
     tcp_servaddr->sin_port=htons(tcp_port);
     tcp_servaddr->sin_addr.s_addr=htons(INADDR_ANY);
@@ -143,11 +151,13 @@ void setup_tcp_connection(int *tcp_sock_fd, struct sockaddr_in *tcp_servaddr, in
 }
 
 int main(int argc, char *argv[]){
+    // CHECKING THE NUMBER OF ARGUMENTS
     if(argc!=4){
         printf("You have to enter 3 arguments, you have entered %d arguments\n", argc-1);
         return 0;
     }
 
+    // VARIABLES DECLARATION AND INITIALIZATION
     uint32_t
         send_value=0,
         recv_value=0;
@@ -172,8 +182,10 @@ int main(int argc, char *argv[]){
 
     char *ip_address=argv[2];
 
+    // STRUCTURES DECLARATION AND INITIALIZATION
     struct sockaddr_in udp_servaddr,tcp_servaddr;
 
+    // CLEARING THE STRUCTURES
     memset(&tcp_servaddr, 0, sizeof(tcp_servaddr));
     memset(&udp_servaddr, 0, sizeof(udp_servaddr));
 
@@ -208,6 +220,8 @@ int main(int argc, char *argv[]){
                 perror("read");
                 return 0;
             }
+
+            // CONVERT FROM NETWORK BYTE ORDER TO HOST BYTE ORDER
             recv_num=(int32_t) ntohl(recv_value);
             printf("\trecieved guess: %d\n", recv_num);
 
