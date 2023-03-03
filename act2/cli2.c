@@ -16,35 +16,50 @@
 #define MAX_PORT 65535
 
 void setup_tcp_connection(int *sock_fd, struct sockaddr_in *servaddr, char* ip_address, int port){
+    /**
+     * SETS UP THE TCP CONNECTION 
+     **/ 
     *sock_fd=socket(AF_INET, SOCK_STREAM, 0);
+    
+    // CHECKING IF THE SOCKET IS CREATED SUCCESSFULLY
     if (*sock_fd<0){
         perror("socket");
         exit(0);
     }
 
+    // INITIALIZING THE SOCKET ADDRESS STRUCTURES
     servaddr->sin_family=AF_INET;
     servaddr->sin_port=htons(port);
 
+    // CONVERTING THE IP ADDRESS FROM STRING TO BINARY
     if(inet_pton(AF_INET, ip_address, &(servaddr->sin_addr))!= 1) {
         perror("inet_pton");
         exit(0);
     }
 
-    int connect_status=connect(&sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
+    // CONNECTING TO THE SERVER AND CHECKING IF THE CONNECTION IS SUCCESSFUL (TCP)
+    int connect_status=connect(*sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
     if(connect_status < 0) {
         perror("connect");
         exit(0);
     }
 }
 
-void process_guess(int *current_guess, int *min, int *max){
+void process_guess(int feedback, int *current_guess, int *min, int *max){
+    /**
+     * PROCESSING THE GUESS NUMBER
+     * IF THE DIFFERENCE BETWEEN THE MAXIMUM AND THE MINIMUM IS EQUAL TO 1, THEN THE RANDOM NUMBER IS FOUND
+     * IF THE GUESS NUMBER IS EQUAL TO 0, THEN THE RANDOM NUMBER IS FOUND
+     * IF THE GUESS NUMBER IS GREATER THAN 0, THEN THE RANDOM NUMBER IS LESS THAN THE GUESS NUMBER
+     * IF THE GUESS NUMBER IS LESS THAN 0, THEN THE RANDOM NUMBER IS GREATER THAN THE GUESS NUMBER
+     **/
     if(*max-*min==1){
         printf("reached the limit!\n");
         *current_guess=*max;
-    }else if(*current_guess==0){
+    }else if(feedback==0){
         printf("\nrandom number is equal to %d\n", *current_guess);
     }else{
-        if(*current_guess>0){
+        if(feedback>0){
             printf("\trandom number is less than %d\n", *current_guess);
             *max=*current_guess;
         }else{
@@ -55,12 +70,14 @@ void process_guess(int *current_guess, int *min, int *max){
     }
 }
 
-int main(int argc, char *argv[]){       
+int main(int argc, char *argv[]){ 
+    // CHECKING IF THE NUMBER OF ARGUMENTS IS VALID      
     if(argc>3){
         fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
         exit(0);
     }
-
+ 
+    // VARIABLES DECLARATION AND INITIALIZATION
     int
         sock_fd,
         iteration=0,
@@ -82,12 +99,14 @@ int main(int argc, char *argv[]){
 
     struct sockaddr_in servaddr;
 
+    // CHECKING IF THE PORT NUMBER IS VALID
     if(!(port<=MAX_PORT && port>=0)){
         fprintf(stderr,"Invalid port number\n");
         exit(0);
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
+    // INITIALIZING THE SOCKET ADDRESS STRUCTURES
+    memset(&servaddr, 0, sizeof(servaddr)); 
 
     printf("Client side\n");
     printf("Connecting to %s:%d\n", ip_address, port);
@@ -99,23 +118,33 @@ int main(int argc, char *argv[]){
         iteration++;
         
         printf("\n\npicked %d\n", current_guess);
+
+        // CONVERT FROM HOST BYTE ORDER TO NETWORK BYTE ORDER
         send_value=htonl((uint32_t)current_guess);
+        // SEND THE GUESS NUMBER TO THE SERVER AND HANDLE ERRORS
         if (write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
             exit(0);
         }
 
-        if (read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
+        // RECEIVE THE RESPONSE FROM THE SERVER AND HANDLE ERRORS
+        if(read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
             exit(0);
         }
+
+        // CONVERT FROM NETWORK BYTE ORDER TO HOST BYTE ORDER
         guess_response=(int32_t) ntohl(recv_value);
+
+        // PROCESSING THE GUESS NUMBER
         proess_guess(&guess_response,&min,&max);
 
     }while(guess_response!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
 
+    // CLOSE THE SOCKET
     close(sock_fd);
+
     printf("goodbye.\n");
 }
