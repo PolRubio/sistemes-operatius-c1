@@ -192,7 +192,7 @@ int main(int argc, char *argv[]){
         do{
             // READS THE INPUT FROM THE CLIENT AND HANDLES ERRORS
             if(read(comm_fd, &recv_value, sizeof(recv_value))<0){
-                perrro("read");
+                perror("read");
                 return 0;
             }
             // CONVERTS FROM NETWORK BYTE ORDER TO HOST BYTE ORDER

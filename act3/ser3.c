@@ -11,7 +11,6 @@
 #include <time.h>
 
 
-
 #define MAX_PORT 65535
 
 #define CONN_KEY 1
@@ -111,9 +110,9 @@ void setup_udp_connection(int *udp_sock_fd, struct sockaddr_in *udp_servaddr, in
     *udp_sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     
     // CHECKING IF THE SOCKET IS CREATED SUCCESSFULLY
-    if (udp_sock_fd<0){
+    if (*udp_sock_fd<0){
         perror("socket");
-        return(1);
+        exit(0);
     }
 
     udp_servaddr->sin_family=AF_INET;
@@ -127,7 +126,7 @@ void setup_tcp_connection(int *tcp_sock_fd, struct sockaddr_in *tcp_servaddr, in
     *tcp_sock_fd=socket(AF_INET, SOCK_STREAM, 0);
 
     // CHECKING IF THE SOCKET IS CREATED SUCCESSFULLY
-    if(tcp_sock_fd<0){
+    if(*tcp_sock_fd<0){
         perror("socket");
         exit(0);
     }
@@ -138,13 +137,13 @@ void setup_tcp_connection(int *tcp_sock_fd, struct sockaddr_in *tcp_servaddr, in
     tcp_servaddr->sin_addr.s_addr=htons(INADDR_ANY);
 
     // binding the port unmber
-    if(bind(tcp_sock_fd, (struct sockaddr *) &tcp_servaddr, sizeof(tcp_servaddr))<0){
+    if(bind(*tcp_sock_fd, (struct sockaddr *) tcp_servaddr, sizeof(*tcp_servaddr))<0){
         perror("bind");
         exit(0); 
     }
 
     // preaparing to accept connections
-    if(listen(tcp_sock_fd, 1)<0){
+    if(listen(*tcp_sock_fd, 1)<0){
         perror("listen");
         exit(0);
     }
@@ -193,7 +192,7 @@ int main(int argc, char *argv[]){
     port_checker(udp_port,tcp_port);
 
     // SETTING UP UDP CONNECTION
-    setup_udp_connection(&udp_sock_fd,&udp_servaddr,udp_port, ip_address);
+    setup_udp_connection(&udp_sock_fd,&udp_servaddr,udp_port,ip_address);
 
     // GET NUMBER OF LINES FROM FILE3
     received_lines_num=get_lines_num(&udp_servaddr,&udp_sock_fd);

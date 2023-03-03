@@ -62,6 +62,7 @@ void free_array(Array *a){
 // END
 
 void get_file_props(Array *a, char *filename){
+    // getting the number of lines and the steam
     FILE *file=fopen(filename,"r");
     if(file==NULL){
        fprintf(stderr, "Error! opening file: %s", filename);
@@ -127,7 +128,7 @@ void setup_udp_connection(int *sock_fd, struct sockaddr_in *servaddr, int port){
     servaddr->sin_port=htons(port);
     servaddr->sin_addr.s_addr=htons(INADDR_ANY);
     
-    if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
+    if(bind(*sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr))<0){
         perror("bind");
         exit(0);
     }

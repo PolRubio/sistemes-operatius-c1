@@ -30,7 +30,7 @@ void setup_tcp_connection(int *sock_fd, struct sockaddr_in *servaddr, char* ip_a
         exit(0);
     }
 
-    int connect_status=connect(&sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
+    int connect_status=connect(*sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
     if(connect_status < 0) {
         perror("connect");
         exit(0);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
         }
         feedback=(int32_t) ntohl(recv_value);
 
-        proess_guess(feedback,&current_guess,&min,&max);
+        process_guess(feedback,&current_guess,&min,&max);
     }while(feedback!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
