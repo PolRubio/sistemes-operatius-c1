@@ -15,6 +15,45 @@
 
 #define MAX_PORT 65535
 
+void setup_tcp_connection(int *sock_fd, struct sockaddr_in *servaddr, char* ip_address, int port){
+    *sock_fd=socket(AF_INET, SOCK_STREAM, 0);
+    if (*sock_fd<0){
+        perror("socket");
+        exit(0);
+    }
+
+    servaddr->sin_family=AF_INET;
+    servaddr->sin_port=htons(port);
+
+    if(inet_pton(AF_INET, ip_address, &(servaddr->sin_addr))!= 1) {
+        perror("inet_pton");
+        exit(0);
+    }
+
+    int connect_status=connect(&sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
+    if(connect_status < 0) {
+        perror("connect");
+        exit(0);
+    }
+}
+
+void process_guess(int *current_guess, int *min, int *max){
+    if(*max-*min==1){
+        printf("reached the limit!\n");
+        *current_guess=*max;
+    }else if(*current_guess==0){
+        printf("\nrandom number is equal to %d\n", *current_guess);
+    }else{
+        if(*current_guess>0){
+            printf("\trandom number is less than %d\n", *current_guess);
+            *max=*current_guess;
+        }else{
+            printf("\trandom number is greater than %d\n", *current_guess);
+            *min=*current_guess;
+        }
+        *current_guess=(*max+*min)/2;
+    }
+}
 
 int main(int argc, char *argv[]){       
     if(argc>3){
@@ -31,7 +70,7 @@ int main(int argc, char *argv[]){
 
     int32_t
         send_num=-1,
-        recv_num=0,
+        guess_response=0,
 
         min=MINIMUM, 
         max=MAXIMUM,
@@ -48,29 +87,13 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
+    memset(&servaddr, 0, sizeof(servaddr));
+
     printf("Client side\n");
     printf("Connecting to %s:%d\n", ip_address, port);
 
-    sock_fd=socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_fd<0){
-        perror("socket");
-        exit(0);
-    }
-
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family=AF_INET;
-    servaddr.sin_port=htons(port);
-
-    if(inet_pton(AF_INET, ip_address, &(servaddr.sin_addr))!= 1) {
-        perror("inet_pton");
-        exit(0);
-    }
-
-    int connect_status=connect(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-    if(connect_status < 0) {
-        perror("connect");
-        exit(0);
-    }
+    // TCP CONNECTION
+    setup_tcp_connection(&sock_fd, &servaddr, ip_address,port);
 
     do{
         iteration++;
@@ -86,27 +109,10 @@ int main(int argc, char *argv[]){
             perror("read");
             exit(0);
         }
-        recv_num=ntohl((int32_t)recv_value);
+        guess_response=(int32_t) ntohl(recv_value);
 
-        if(max-min==1){
-            printf("reached the limit!\n");
-            current_guess=max;
-            break;
-        }else if(recv_num==0){
-            printf("\nrandom number is equal to %d\n", current_guess);
-            break;
-        }else{
-            if(recv_num>0){
-                printf("\trandom number is less than %d\n", current_guess);
-                max=current_guess;
-            }else{
-                printf("\trandom number is greater than %d\n", current_guess);
-                min=current_guess;
-            }
-            current_guess=(max+min)/2;
-        }
-        send_num=0;
-    }while(recv_num!=0);
+        proess_guess(guess_response);
+    }while(guess_response!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
 
