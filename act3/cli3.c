@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
         }
         guess_response=(int32_t) ntohl(recv_value);
 
-        proess_guess(guess_response);
+        proess_guess(&guess_response,&min,&max);
     }while(guess_response!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);

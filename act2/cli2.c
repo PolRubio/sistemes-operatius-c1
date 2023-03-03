@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
             exit(0);
         }
         guess_response=(int32_t) ntohl(recv_value);
-        proess_guess(guess_response);
+        proess_guess(&guess_response,&min,&max);
 
     }while(guess_response!=0);
 

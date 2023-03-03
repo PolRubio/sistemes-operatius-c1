@@ -16,21 +16,25 @@
 #define MAX_PORT 65535
 
 void setup_tcp_connection(int *sock_fd, struct sockaddr_in *servaddr, char* ip_address, int port){
+    // creating a TCP socket
     *sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (*sock_fd<0){
         perror("socket");
         exit(0);
     }
 
+    // setting up sockaddr_in struct
     servaddr->sin_family=AF_INET;
     servaddr->sin_port=htons(port);
 
+    // Converting ip address to binary network format
     if(inet_pton(AF_INET, ip_address, &(servaddr->sin_addr))!= 1) {
         perror("inet_pton");
         exit(0);
     }
 
-    int connect_status=connect(&sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
+    // opening a connection on socket
+    int connect_status=connect(*sock_fd, (struct sockaddr *) servaddr, sizeof(*servaddr));
     if(connect_status < 0) {
         perror("connect");
         exit(0);
@@ -61,6 +65,8 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
+
+    // Initializing all variables.
     int
         sock_fd,
         iteration=0,
@@ -81,12 +87,15 @@ int main(int argc, char *argv[]){
         recv_value=0;    
 
     struct sockaddr_in servaddr;
+    // END
 
+    // Checking if port number is valid
     if(!(port<=MAX_PORT && port>=0)){
         fprintf(stderr,"Invalid port number\n");
         exit(0);
     }
 
+    // Cleaning servaddr memory
     memset(&servaddr, 0, sizeof(servaddr));
 
     printf("Client side\n");
@@ -99,23 +108,30 @@ int main(int argc, char *argv[]){
         iteration++;
         
         printf("\n\npicked %d\n", current_guess);
+
+        // Sending user guess to the server
         send_value=htonl((uint32_t)current_guess);
         if (write(sock_fd, &send_value, sizeof(uint32_t)) < 0) {
             perror("write");
             exit(0);
         }
 
-        if (read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
+        // Getting feedback from the guessed number
+        if(read(sock_fd, &recv_value, sizeof(uint32_t)) < 0) {
             perror("read");
             exit(0);
         }
         guess_response=(int32_t) ntohl(recv_value);
-        proess_guess(guess_response);
+
+        // Game logic
+        proess_guess(&guess_response,&min,&max);
 
     }while(guess_response!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
 
+    // closing socket
     close(sock_fd);
+
     printf("goodbye.\n");
 }
