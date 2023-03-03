@@ -28,11 +28,13 @@ int random_number_gen(int min_range, int max_range, int seed){
 }
 
 int main(int argc, char *argv[]){
+    // CHECKS IF THE PORT IS VALID
     if(argc>2){
         fprintf(stderr, "Too many arguments\nMaximum 1 argument, you have entered %d arguments\n", argc-1);
         exit(0);
     }
 
+    // VARIABLES DECLARATION AND INITIALIZATION
     uint32_t 
         recv_value, 
         send_value;
@@ -51,7 +53,8 @@ int main(int argc, char *argv[]){
         randnum=0;
         
     struct sockaddr_in servaddr;
-    
+
+    // CHECKS IF THE PORT IS VALID    
     if(!(port<=MAX_PORT && port>=0)){
         fprintf(stderr,"Invalid port number\n");
         exit(0);
