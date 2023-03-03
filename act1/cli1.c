@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
         guess_response=(int32_t) ntohl(recv_value);
 
         // PROCESSING THE GUESS NUMBER
-        proess_guess(&guess_response,&min,&max);
+        process_guess(guess_response, &current_guess,&min,&max);
 
     }while(guess_response!=0);
 

@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
 
     // LISTEN FOR CONNECTIONS AND HANDLE ERRORS
     if(listen(sock_fd, 1)<0){
-        perrro("listen");
+        perror("listen");
         return 0;
     }
     
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]){
             totaliterations++;
         }while(result!=0);
         
-        printf("Total iterations: %d\n", totaliterations);
+        printf("Total iterations: %d\n\n", totaliterations);
     }
     // CLOSES THE CONNECTION AND THE SOCKET
     close(sock_fd);
