@@ -99,8 +99,7 @@ void get_file_props(Array *a, char *filename){
     fclose(file);
 }
 
-int main(int argc, char *argv[]){
-    // CHECKS IF THE NUMBER OF ARGUMENTS IS VALID
+void validate_argc(int argc){
     if(argc>3){
         fprintf(stderr,"Too many arguments\nMaximum 2 argument, you have entered %d arguments\n", argc-1);
         exit(0);
@@ -108,6 +107,11 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Too few arguments\nMinimum 1 argument, you have entered %d arguments\n", argc-1);
         exit(0);
     }
+}
+
+int main(int argc, char *argv[]){
+    // CHECKS IF THE NUMBER OF ARGUMENTS IS VALID
+    validate_argc(argc);
 
     // VARIABLES DECLARATION AND INITIALIZATION
     uint32_t
@@ -145,7 +149,7 @@ int main(int argc, char *argv[]){
     sock_fd=socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd<0){
         perror("socket");
-        return 1;
+        exit(0);
     }
     
     // BINDS THE SOCKET TO THE PORT
@@ -153,15 +157,22 @@ int main(int argc, char *argv[]){
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
+
     if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))){
         perror("bind");
-        return 1;
+        exit(0);
     }
 
+    // LISTENS FOR CONNECTIONS
+    if(listen(sock_fd, 1)<0){
+        perror("listen");
+        exit(0);
+    }    
+
+
+    // GET FILE LINES & NUMBER OF CHARS
     get_file_props(&array_holder, filename);
 
-    // LISTENS FOR CONNECTIONS
-    listen(sock_fd, 1);    
 
     while (1){
         printf("\nWaiting for connection on 127.0.0.1:%d...\n", port);
@@ -170,6 +181,7 @@ int main(int argc, char *argv[]){
         comm_fd=accept(sock_fd, NULL, NULL);
         if(comm_fd<0){
             fprintf(stderr, "Failed to accept the connection:%d\n", comm_fd);
+            continue;
         }
 
         int indx=random_number_gen(0, array_holder.used, general_iterations++);
