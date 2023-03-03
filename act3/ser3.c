@@ -89,6 +89,34 @@ int get_secret(int received_lines_num, int *udp_sock_fd, struct sockaddr_in *udp
     return((int32_t) ntohl(recv_value));
 }
 
+void setup_udp_connection(int *udp_sock_fd, struct sockaddr_in *udp_servaddr, int udp_port,char *ip_address){
+    *udp_sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (udp_sock_fd<0){
+        perror("socket");
+        return(1);
+    }
+    udp_servaddr->sin_family=AF_INET;
+    udp_servaddr->sin_port=htons(udp_port);
+    udp_servaddr->sin_addr.s_addr=inet_addr(ip_address);
+}
+
+void setup_tcp_connection(int *tcp_sock_fd, struct sockaddr_in *tcp_servaddr, int tcp_port){
+    *tcp_sock_fd=socket(AF_INET, SOCK_STREAM, 0); 
+
+    tcp_servaddr->sin_family=AF_INET;
+    tcp_servaddr->sin_port=htons(tcp_port);
+    tcp_servaddr->sin_addr.s_addr=htons(INADDR_ANY);
+
+    if(bind(tcp_sock_fd, (struct sockaddr *) &tcp_servaddr, sizeof(tcp_servaddr))<0){
+        perror("bind");
+        exit(0); 
+    }
+    if(listen(tcp_sock_fd, 1)<0){
+        perror("listen");
+        exit(0);
+    }
+}
+
 int main(int argc, char *argv[]){
     if(argc!=4){
         printf("You have to enter 3 arguments, you have entered %d arguments\n", argc-1);
@@ -121,38 +149,20 @@ int main(int argc, char *argv[]){
 
     struct sockaddr_in udp_servaddr,tcp_servaddr;
 
+    memset(&tcp_servaddr, 0, sizeof(tcp_servaddr));
+    memset(&udp_servaddr, 0, sizeof(udp_servaddr));
+
+    // CHECK THE VALIDITY OF PORTS
     port_checker(udp_port,tcp_port);
 
     // SETTING UP UDP CONNECTION
-    udp_sock_fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (udp_sock_fd<0){
-        perror("socket");
-        return(1);
-    }
-    udp_servaddr.sin_family=AF_INET;
-    udp_servaddr.sin_port=htons(udp_port);
-    udp_servaddr.sin_addr.s_addr=inet_addr(ip_address);
-    // END
+    setup_udp_connection(&udp_sock_fd,&udp_servaddr,udp_port, ip_address);
 
+    // GET NUMBER OF LINES FROM FILE3
     received_lines_num=get_lines_num(&udp_servaddr,&udp_sock_fd);
 
     // SETTING UP TCP CONNECTION
-    tcp_sock_fd=socket(AF_INET, SOCK_STREAM, 0); 
-
-    memset(&tcp_servaddr, 0, sizeof(tcp_servaddr)); 
-    tcp_servaddr.sin_family=AF_INET;
-    tcp_servaddr.sin_port=htons(tcp_port);
-    tcp_servaddr.sin_addr.s_addr=htons(INADDR_ANY);
-
-    if(bind(tcp_sock_fd, (struct sockaddr *) &tcp_servaddr, sizeof(tcp_servaddr))<0){
-        perror("bind");
-        exit(0); 
-    }
-    if(listen(tcp_sock_fd, 1)<0){
-        perror("listen");
-        exit(0);
-    }
-    // END
+    setup_tcp_connection(&tcp_sock_fd,&tcp_servaddr,tcp_port);
 
     while(1){
         printf("Waiting for connection on 127.0.0.1:%d\n", tcp_port);
