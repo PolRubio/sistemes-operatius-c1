@@ -37,14 +37,16 @@ void setup_tcp_connection(int *sock_fd, struct sockaddr_in *servaddr, char* ip_a
     }
 }
 
-void process_guess(int *current_guess, int *min, int *max){
+void process_guess(int feedback,int *current_guess, int *min, int *max){
     if(*max-*min==1){
         printf("reached the limit!\n");
-        *current_guess=*max;
-    }else if(*current_guess==0){
+        feedback=0;
+    }
+    
+    if(feedback==0){
         printf("\nrandom number is equal to %d\n", *current_guess);
     }else{
-        if(*current_guess>0){
+        if(feedback>0){
             printf("\trandom number is less than %d\n", *current_guess);
             *max=*current_guess;
         }else{
@@ -70,7 +72,7 @@ int main(int argc, char *argv[]){
 
     int32_t
         send_num=-1,
-        guess_response=0,
+        feedback=0,
 
         min=MINIMUM, 
         max=MAXIMUM,
@@ -109,10 +111,10 @@ int main(int argc, char *argv[]){
             perror("read");
             exit(0);
         }
-        guess_response=(int32_t) ntohl(recv_value);
+        feedback=(int32_t) ntohl(recv_value);
 
-        proess_guess(&guess_response,&min,&max);
-    }while(guess_response!=0);
+        proess_guess(feedback,&current_guess,&min,&max);
+    }while(feedback!=0);
 
     printf("\tnumber: %d\n\tguesses: %d\n", current_guess, iteration);
 

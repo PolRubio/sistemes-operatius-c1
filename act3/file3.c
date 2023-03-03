@@ -19,12 +19,14 @@
 
 // DYNAMIC ARRAY
 typedef struct{
-    int *array;
-    size_t used;
-    size_t size;
+    int *array; // array of elements
+    size_t used; // how much positions are filled
+    size_t size; // current size of the array
 } Array;
 
 void init_array(Array *a, size_t initial_size){
+    // initialize the array, by exmpanding the array size 
+
     a->array=malloc(initial_size*sizeof(int));
     if(a->array==NULL){
         perror("malloc");
@@ -36,19 +38,21 @@ void init_array(Array *a, size_t initial_size){
 }
 
 void insert_array(Array *a, int element){
+    // if the array is completly filled, expand it.
     if(a->used==a->size){
         a->size*=2; // each time the array fills, expand it 100%. probably not the most optimzed value, but it will work.
-        int *tmp=realloc(a->array,a->size*sizeof(int));
+        int *tmp=realloc(a->array,a->size*sizeof(int)); // expand the memory size
         if(!tmp) {
             fprintf(stderr,"error happend during the extension of the array.");
             exit(0);
         }
         a->array=tmp;
     }
-    a->array[a->used++]=element;
+    a->array[a->used++]=element; // insert element
 }
 
 void free_array(Array *a){
+    // clearing used memory space
     memset(a->array, 0, sizeof(a->array));
     free(a->array);
 
@@ -67,7 +71,6 @@ void get_file_props(Array *a, char *filename){
     int counter=0;
     for (char c=getc(file); c!=EOF; c=getc(file)){
         if(c=='\n'){
-            
             insert_array(a,counter%MAXIMUM);
             counter=0;
         }
@@ -162,7 +165,7 @@ int main(int argc, char *argv[]){
     // END
 
 
-    // CLEAR VARIABLES
+    // CLEARING VARIABLES
     memset(&servaddr,0,sizeof(servaddr));
     memset(&clientaddr,0,sizeof(clientaddr));
 
@@ -198,6 +201,7 @@ int main(int argc, char *argv[]){
         recv_num=((int32_t) ntohl(recv_value)) % array_holder.used;
         printf("\trecieved line num: %d\n", recv_num);
 
+        // getting the number of characters on recieved line number.
         send_value=htonl((uint32_t) array_holder.array[recv_num]);
         printf("\tsending chars: %d\n\n", array_holder.array[recv_num]);
 
@@ -209,4 +213,6 @@ int main(int argc, char *argv[]){
         }
     }
     close(sock_fd);
+
+    free_array(&array_holder);
 }
