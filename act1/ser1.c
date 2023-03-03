@@ -80,7 +80,6 @@ int main(int argc, char *argv[]){
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(port);
     servaddr.sin_addr.s_addr=htons(INADDR_ANY);
-
     if(bind(sock_fd, (struct sockaddr *) &servaddr, sizeof(servaddr))<0){
         perror("bind");
         return 0;
@@ -136,6 +135,6 @@ int main(int argc, char *argv[]){
         
         printf("Total iterations: %d\n", totaliterations);
     }
-    // CLOSE THE SOCKET
+    // CLOSES THE CONNECTION AND THE SOCKET
     close(sock_fd);
 }
